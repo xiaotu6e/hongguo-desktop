@@ -1,0 +1,3 @@
+flet[desktop]==1.0.1
+flet-dropzone==0.4.0
+apkutils==3.0.0

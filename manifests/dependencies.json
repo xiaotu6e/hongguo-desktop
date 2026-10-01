@@ -1,0 +1,34 @@
+{
+  "adb": {
+    "url": "https://dl.google.com/android/repository/platform-tools_r37.0.1-win.zip",
+    "filename": "platform-tools_r37.0.1-win.zip",
+    "sha256": "45f4d63113e895ebde0c90f194099a4676b6ac653bd28d54314a9e022bbc1a99",
+    "bytes": 8044989
+  },
+  "seven_zip": {
+    "url": "https://www.7-zip.org/a/7zr.exe",
+    "filename": "7zr.exe",
+    "sha256": "ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d",
+    "bytes": 602624
+  },
+  "autobridge": {
+    "url": "https://codeload.github.com/Sayuki2123/AutoBridge/tar.gz/cedb66c1dc359fe89100a099cd439fc45bd2e153",
+    "filename": "autobridge-cedb66c.tar.gz",
+    "sha256": "5ab6473be76d2ee5554bc3bd7522b3bfca945e597be0e07f927100164b587a06",
+    "bytes": 9760658
+  },
+  "wsa": {
+    "version": "2407.40000.4.0 LTS8 NoGApps NoAmazon",
+    "url": "https://github.com/MustardChef/WSABuilds/releases/download/Windows_11_2407.40000.4.0_LTS_8/WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z",
+    "filename": "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z",
+    "sha256": "9c51759762f14cdebde7da08ccf94deb220484215468526e1ef688fd669ab7c1",
+    "bytes": 554029377
+  },
+  "r8": {
+    "version": "8.3.37",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.3.37/r8-8.3.37.jar",
+    "filename": "r8-8.3.37.jar",
+    "sha256": "59753e70a74f918389cc87f1b7d66b5c0862932559167425708ded159e3de439",
+    "bytes": 16628796
+  }
+}

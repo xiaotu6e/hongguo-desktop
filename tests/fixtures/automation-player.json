@@ -1,0 +1,3423 @@
+{
+  "ok": true,
+  "activity": "com.dragon.read.component.shortvideo.impl.ShortSeriesActivity",
+  "nodes": [
+    {
+      "path": "0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0",
+      "id": "com.phoenix.read:id/action_bar_root",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0",
+      "id": "android:id/content",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0",
+      "id": "com.phoenix.read:id/imd",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0",
+      "id": "com.phoenix.read:id/mq",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0",
+      "id": "com.phoenix.read:id/fbp",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/1",
+      "id": "com.phoenix.read:id/j5x",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2",
+      "id": "com.phoenix.read:id/dte",
+      "text": "",
+      "desc": "",
+      "class": "androidx.viewpager.widget.ViewPager",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0",
+      "id": "com.phoenix.read:id/j5i",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/0",
+      "id": "com.phoenix.read:id/ief",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1",
+      "id": "com.phoenix.read:id/root_view",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2",
+      "id": "com.phoenix.read:id/h8p",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0",
+      "id": "com.phoenix.read:id/l0",
+      "text": "",
+      "desc": "",
+      "class": "androidx.viewpager.widget.ViewPager",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "androidx.recyclerview.widget.RecyclerView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/0/3/5/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        -60,
+        1335,
+        6
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/0/3/5/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        -60,
+        1335,
+        6
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/0/3/5/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        -60,
+        1335,
+        6
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/0/3/5/0/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        -60,
+        1335,
+        6
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/1",
+      "id": "com.phoenix.read:id/i0e",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.RelativeLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2",
+      "id": "com.phoenix.read:id/hz8",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.RelativeLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/0/0/0",
+      "id": "com.phoenix.read:id/a0q",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/0/0/1",
+      "id": "com.phoenix.read:id/c6d",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1483
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/0/0/2",
+      "id": "com.phoenix.read:id/b1",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        948,
+        1095,
+        1044,
+        1191
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        1296,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/2/1/0",
+      "id": "com.phoenix.read:id/i45",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        1296,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3",
+      "id": "com.phoenix.read:id/hz9",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/0",
+      "id": "com.phoenix.read:id/dv6",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/1",
+      "id": "com.phoenix.read:id/eja",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4",
+      "id": "com.phoenix.read:id/acm",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1475,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1475,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0",
+      "id": "com.phoenix.read:id/hzp",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1475,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0",
+      "id": "com.phoenix.read:id/hzq",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1475,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1",
+      "id": "com.phoenix.read:id/egm",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1499,
+        1149,
+        1559
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0",
+      "id": "com.phoenix.read:id/hzo",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1499,
+        1149,
+        1559
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1499,
+        1149,
+        1559
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0/0",
+      "id": "com.phoenix.read:id/root_view",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1499,
+        855,
+        1541
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1499,
+        855,
+        1541
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0/0/0/0",
+      "id": "com.phoenix.read:id/al",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1499,
+        855,
+        1541
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0/0/0/0/0",
+      "id": "com.phoenix.read:id/a0",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        683,
+        1508,
+        707,
+        1532
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0/0/0/0/1",
+      "id": "com.phoenix.read:id/aaq",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        710,
+        1507,
+        828,
+        1533
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/1/0/0/0/0/0/2",
+      "id": "com.phoenix.read:id/aap",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        831,
+        1513,
+        846,
+        1528
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/2",
+      "id": "com.phoenix.read:id/g41",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1559,
+        1149,
+        1612
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/2/0",
+      "id": "com.phoenix.read:id/ki2",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1559,
+        1149,
+        1606
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/2/0/0",
+      "id": "com.phoenix.read:id/d4",
+      "text": "测试剧",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1559,
+        962,
+        1594
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/2/0/1",
+      "id": "com.phoenix.read:id/right_icon",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        968,
+        1565,
+        980,
+        1589
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4",
+      "id": "com.phoenix.read:id/i4a",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1612,
+        1149,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0",
+      "id": "com.phoenix.read:id/ijz",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1612,
+        1149,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0/0",
+      "id": "com.phoenix.read:id/e7h",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1612,
+        1149,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0/0/0",
+      "id": "com.phoenix.read:id/container",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1612,
+        1149,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0/0/0/0",
+      "id": "com.phoenix.read:id/e7b",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1616,
+        698,
+        1640
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0/0/0/1",
+      "id": "com.phoenix.read:id/e7c",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        701,
+        1612,
+        764,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0/0/0/2",
+      "id": "com.phoenix.read:id/e7_",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        764,
+        1612,
+        1088,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/4/0/0/0/3",
+      "id": "com.phoenix.read:id/dej",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1107,
+        1612,
+        1149,
+        1644
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/7",
+      "id": "com.phoenix.read:id/egh",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1644,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/7/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1644,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/7/0/0",
+      "id": "com.phoenix.read:id/hzm",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1656,
+        1149,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/7/0/0/0",
+      "id": "com.phoenix.read:id/e8c",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1661,
+        692,
+        1679
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/4/0/0/0/7/0/0/1",
+      "id": "com.phoenix.read:id/it2",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        698,
+        1656,
+        895,
+        1683
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5",
+      "id": "com.phoenix.read:id/hg6",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1159,
+        1342,
+        1692
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1159,
+        1342,
+        1692
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1159,
+        1342,
+        1692
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/0",
+      "id": "com.phoenix.read:id/avatar_compose_component",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        1170,
+        1335,
+        1236
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/0/0",
+      "id": "com.phoenix.read:id/f7d",
+      "text": "",
+      "desc": "",
+      "class": "androidx.compose.ui.platform.ComposeView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        1170,
+        1335,
+        1236
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        1170,
+        1335,
+        1236
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        1170,
+        1335,
+        1236
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        1170,
+        1335,
+        1236
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        1170,
+        1335,
+        1236
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1",
+      "id": "com.phoenix.read:id/g3_",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1254,
+        1336,
+        1692
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/0",
+      "id": "com.phoenix.read:id/i3t",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1264,
+        1336,
+        1363
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/0/0",
+      "id": "com.phoenix.read:id/fdf",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1264,
+        1336,
+        1363
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1264,
+        1336,
+        1333
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/0/0/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1275,
+        1336,
+        1328,
+        1363
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/1",
+      "id": "com.phoenix.read:id/cgr",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1373,
+        1336,
+        1463
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/1/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1373,
+        1336,
+        1463
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/1/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1373,
+        1336,
+        1442
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/1/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1373,
+        1336,
+        1442
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/1/0/1",
+      "id": "",
+      "text": "502",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1442,
+        1336,
+        1463
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/2",
+      "id": "com.phoenix.read:id/fn8",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1474,
+        1336,
+        1573
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/2/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1474,
+        1336,
+        1543
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/2/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1474,
+        1336,
+        1543
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/2/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1546,
+        1336,
+        1573
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/3",
+      "id": "com.phoenix.read:id/i1y",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1583,
+        1336,
+        1682
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/3/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1583,
+        1336,
+        1682
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/3/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1583,
+        1336,
+        1652
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/3/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1583,
+        1336,
+        1652
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/1/3/0/1",
+      "id": "",
+      "text": "分享",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1267,
+        1655,
+        1336,
+        1682
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/2",
+      "id": "com.phoenix.read:id/eyv",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1270,
+        1217,
+        1333,
+        1256
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/2/0",
+      "id": "com.phoenix.read:id/eyv",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1285,
+        1220,
+        1318,
+        1253
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/2/0/1",
+      "id": "com.phoenix.read:id/fx7",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1285,
+        1220,
+        1318,
+        1253
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/5/0/0/2/0/1/0",
+      "id": "com.phoenix.read:id/f2h",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1294,
+        1229,
+        1309,
+        1244
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/7",
+      "id": "com.phoenix.read:id/i47",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        1701,
+        1342,
+        1731
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/7/0",
+      "id": "com.phoenix.read:id/hw9",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        1701,
+        1342,
+        1731
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/7/0/0",
+      "id": "com.phoenix.read:id/c6",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        654,
+        1701,
+        762,
+        1731
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/7/0/0/0",
+      "id": "com.phoenix.read:id/f3b",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        705,
+        1712,
+        711,
+        1718
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/7/0/1",
+      "id": "com.phoenix.read:id/hn2",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        1701,
+        1342,
+        1731
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/10",
+      "id": "com.phoenix.read:id/hw2",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        1716,
+        1342,
+        1731
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11",
+      "id": "com.phoenix.read:id/hh",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1728,
+        1318,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1728,
+        1318,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0",
+      "id": "com.phoenix.read:id/ap9",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1728,
+        1252,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0",
+      "id": "com.phoenix.read:id/i3h",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1728,
+        1252,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0/0",
+      "id": "com.phoenix.read:id/root_layout",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        1728,
+        1252,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.TableLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        698,
+        1742,
+        1180,
+        1774
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.TableRow",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        698,
+        1742,
+        1180,
+        1774
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0/0/0/0/0",
+      "id": "com.phoenix.read:id/kea",
+      "text": "选集",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        698,
+        1742,
+        740,
+        1774
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0/0/0/0/1",
+      "id": "com.phoenix.read:id/kgy",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        740,
+        1742,
+        901,
+        1774
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/0/0/0/1",
+      "id": "com.phoenix.read:id/b3c",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1198,
+        1751,
+        1228,
+        1766
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/1",
+      "id": "com.phoenix.read:id/g9t",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1252,
+        1737,
+        1318,
+        1779
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/1/0",
+      "id": "com.phoenix.read:id/eft",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1276,
+        1737,
+        1318,
+        1779
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/1/0/0",
+      "id": "com.phoenix.read:id/efr",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1276,
+        1737,
+        1318,
+        1779
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/3/11/0/1/0/0/0",
+      "id": "com.phoenix.read:id/efs",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1276,
+        1737,
+        1318,
+        1779
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/4",
+      "id": "com.phoenix.read:id/i62",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/4/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/1/6",
+      "id": "com.phoenix.read:id/dy6",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        675,
+        1342,
+        1716
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/2/3/5/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        2400,
+        1335,
+        2466
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/2/3/5/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        2400,
+        1335,
+        2466
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/2/3/5/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        2400,
+        1335,
+        2466
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/2/0/0/2/3/5/0/0/0/0/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1269,
+        2400,
+        1335,
+        2466
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/3",
+      "id": "com.phoenix.read:id/fy_",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.RelativeLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/4",
+      "id": "com.phoenix.read:id/flx",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/5",
+      "id": "com.phoenix.read:id/ke",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        732
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6",
+      "id": "com.phoenix.read:id/ixy",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.ViewGroup",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/0",
+      "id": "com.phoenix.read:id/gk0",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        1342,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/1",
+      "id": "com.phoenix.read:id/f3u",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        674,
+        585,
+        710,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/2",
+      "id": "com.phoenix.read:id/k_4",
+      "text": "第6集",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        716,
+        570,
+        1145,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/3",
+      "id": "com.phoenix.read:id/df9",
+      "text": "",
+      "desc": "",
+      "class": "androidx.appcompat.widget.LinearLayoutCompat",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1169,
+        570,
+        1276,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/3/0",
+      "id": "com.phoenix.read:id/koz",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1169,
+        585,
+        1252,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/3/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.LinearLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1169,
+        585,
+        1252,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/3/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1169,
+        585,
+        1205,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/3/0/0/1",
+      "id": "",
+      "text": "1.0x",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1211,
+        588,
+        1252,
+        617
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/0/0/4",
+      "id": "com.phoenix.read:id/f3v",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1276,
+        585,
+        1312,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/0/1/6/1",
+      "id": "com.phoenix.read:id/e07",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.FrameLayout",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1102,
+        583,
+        1282,
+        622
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        570,
+        2034,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        570,
+        2034,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        570,
+        2034,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        570,
+        2034,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/1/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        570,
+        2034,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        636,
+        2034,
+        1800
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        663,
+        1513,
+        873
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        663,
+        1513,
+        873
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        663,
+        1513,
+        873
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/0/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1471,
+        828,
+        1507,
+        864
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        663,
+        1891,
+        711
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/2",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        711,
+        1597,
+        741
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        753,
+        2010,
+        783
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        756,
+        1555,
+        780
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        756,
+        1555,
+        780
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        756,
+        1555,
+        780
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/0/0/0/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        756,
+        1555,
+        780
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1561,
+        753,
+        1687,
+        783
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/2",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1693,
+        753,
+        1756,
+        783
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/2/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1702,
+        763,
+        1714,
+        775
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/3/2/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1717,
+        758,
+        1747,
+        779
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/4",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1531,
+        819,
+        2010,
+        873
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/4/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1735,
+        834,
+        1759,
+        858
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/4/1",
+      "id": "",
+      "text": "收藏",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1765,
+        831,
+        1807,
+        861
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1342,
+        903,
+        1886,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": false,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        903,
+        1548,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/0/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1396,
+        903,
+        1476,
+        938
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/0/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        944,
+        1471,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/0/2",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1523,
+        906,
+        1524,
+        969
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": false,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1548,
+        903,
+        1730,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/1/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1578,
+        903,
+        1651,
+        938
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/1/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1548,
+        944,
+        1653,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/1/2",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1705,
+        906,
+        1706,
+        969
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/2",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": false,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1730,
+        903,
+        1862,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/2/0",
+      "id": "",
+      "text": "2026.09",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1760,
+        903,
+        1851,
+        936
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/5/2/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1730,
+        942,
+        1814,
+        972
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/6",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        1002,
+        1462,
+        1037
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/7",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        1059,
+        2010,
+        1125
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/7/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        1059,
+        2010,
+        1125
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/7/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1959,
+        1092,
+        2001,
+        1125
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/8",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1378,
+        1143,
+        1435,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/8/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1378,
+        1143,
+        1414,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/8/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1417,
+        1147,
+        1435,
+        1165
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/9",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1468,
+        1143,
+        1525,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/9/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1468,
+        1143,
+        1504,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/9/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1507,
+        1147,
+        1525,
+        1165
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/10",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1558,
+        1143,
+        1615,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/10/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1558,
+        1143,
+        1594,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/10/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1597,
+        1147,
+        1615,
+        1165
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/11",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1648,
+        1143,
+        1705,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/11/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1648,
+        1143,
+        1684,
+        1169
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/2/11/1",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1687,
+        1147,
+        1705,
+        1165
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/3",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        1728,
+        2010,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/3/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1592,
+        1728,
+        1784,
+        1788
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/3/0/0",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1661,
+        1743,
+        1745,
+        1773
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/4",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        570,
+        2010,
+        636
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/4/0",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1366,
+        585,
+        1402,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/4/1",
+      "id": "",
+      "text": "示例文本",
+      "desc": "",
+      "class": "android.widget.TextView",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1402,
+        584,
+        1878,
+        623
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/4/2",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1908,
+        585,
+        1944,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/0/0/0/0/2/1/0/0/4/3",
+      "id": "",
+      "text": "",
+      "desc": "",
+      "class": "android.widget.ImageView",
+      "clickable": true,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        1974,
+        585,
+        2010,
+        621
+      ]
+    },
+    {
+      "path": "0/0/0/0/0/1",
+      "id": "com.phoenix.read:id/fj",
+      "text": "",
+      "desc": "",
+      "class": "android.view.View",
+      "clickable": false,
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "bounds": [
+        650,
+        570,
+        651,
+        571
+      ]
+    }
+  ]
+}

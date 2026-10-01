@@ -1,0 +1,26 @@
+{
+  "source": "https://github.com/Sayuki2123/AutoBridge",
+  "apk": "com.phoenix.read 7.3.9.32 arm64-v8a",
+  "wsa": "2407.40000.4.0 LTS8 NoGApps NoAmazon",
+  "date": "2026-09-29",
+  "images": {
+    "system": {
+      "original_sha256": "5aff68594968f341dcd97c6304a29a730867c1c3588ded9c80d7c66f4d3fd83d",
+      "installed_sha256": "1ec3d441d05acada92aee9b6d57de715721cb5831f32ffda0df45c876ba6fe99"
+    },
+    "vendor": {
+      "original_sha256": "8b5e9c8b0c7bec36db68a6f04e6dd4785ed25608fe10a53e82b3c936b81474d4",
+      "installed_sha256": "1fbe52a000024bddf516abd1808996b793415a764bcc751fe870246c0c963a31"
+    }
+  },
+  "video_compatibility": {
+    "disabled_codec": "OMX.android.latte.hevc.decoder",
+    "config": "vendor/etc/media_codecs_google_video.xml",
+    "reason": "Reproduced video crop/size error on episode or resolution switch; Hongguo falls back to its internal decoder.",
+    "audio_configuration_changed": false,
+    "original_config": "%LOCALAPPDATA%/HongguoDesktopHelper/wsa-backup/2407.40000.4.0-lts8/media_codecs_google_video.xml"
+  },
+  "recorded_source_archive_sha256": "1cdedbb8a8a61a11b175136cebdf77883d9d7a9274f7f11c697369600927a49f",
+  "pinned_autobridge_commit": "cedb66c1dc359fe89100a099cd439fc45bd2e153",
+  "pinned_autobridge_archive_sha256": "5ab6473be76d2ee5554bc3bd7522b3bfca945e597be0e07f927100164b587a06"
+}

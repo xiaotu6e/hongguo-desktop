@@ -1,0 +1,17 @@
+.venv/
+build/
+app/
+dist/
+runtime/
+__pycache__/
+*.py[cod]
+*.lnk
+*.log
+.env
+.env.*
+settings.json
+watch_history.json
+installation.json
+*.vhdx
+*.apk
+src/assets/platform-tools/

@@ -1,0 +1,18 @@
+[project]
+name = "hongguo_desktop"
+version = "0.1.0"
+description = "Android desktop launcher and APK installer"
+requires-python = ">=3.11"
+dependencies = ["flet[desktop]==1.0.1", "flet-dropzone==0.4.0", "apkutils==3.0.0"]
+
+[tool.flet]
+org = "io.github.xiaotu6e"
+product = "红果桌面助手"
+company = "xiaotu6e"
+copyright = "Copyright (c) 2026 xiaotu6e"
+
+[tool.flet.app]
+path = "src"
+
+[tool.flet.windows]
+executable_name = "hongguo_desktop"
