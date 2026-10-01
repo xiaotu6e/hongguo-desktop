@@ -2,6 +2,8 @@
 
 开源整理日期：2026-10-01。
 
+首次公开推送的 [GitHub CI](https://github.com/xiaotu6e/hongguo-desktop/actions/runs/36885180598) 已通过，包含依赖安装、离线测试和 PowerShell 解析检查。[v0.1.0](https://github.com/xiaotu6e/hongguo-desktop/releases/tag/v0.1.0) 的源码包、成品包和校验文件已发布；GitHub 返回的文件摘要与本地 SHA-256 一致。
+
 ## 本次已经执行
 
 - 在独立项目目录新建 Python 3.11 虚拟环境，安装助手依赖与 Flet Desktop 1.0.1。
@@ -33,6 +35,6 @@
 - 第二台全新 Windows 机器的完整安装，包括系统功能、Appx 依赖、WSL 初次设置和 ADB 授权。
 - 新泛化脚本在真实注册 WSA 上的部署、故障回退与恢复操作。
 - 本次候选部署后的真实画面、声音、长时间播放、其他 APK 与 ARM32 应用。
-- GitHub 托管 CI 及公开 Release 下载，需要仓库上传后运行。
+- Release 在另一台使用者电脑上的完整下载、安装与实际播放验收。
 
 安装或静态检查成功不代表上述项目通过。每次修改 Windows/WSA/APK 版本后重新执行对应验收。

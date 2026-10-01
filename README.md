@@ -38,13 +38,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Insta
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -DryRun -InstallWsa -RepairWsa -Launch
 ```
 
-打包成品发布后，可跳过 Python 环境安装：
+已发布 [v0.1.0 成品和源码包](https://github.com/xiaotu6e/hongguo-desktop/releases/tag/v0.1.0)，可跳过 Python 环境安装：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.0 -Launch
 ```
 
-成品下载和源码入口分别在仓库的 Releases 和 Code 页面；安装脚本依照 `manifests/release.json` 校验成品。尚未发布 Release 时，请使用默认 Source 模式。
+成品下载和源码入口分别在仓库的 Releases 和 Code 页面；安装脚本依照 `manifests/release.json` 校验成品。已有 WSA/APK 的用户也可将成品 ZIP 解压到固定目录后，双击 hongguo_desktop.exe。
 
 ## 安装后检查
 
