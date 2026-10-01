@@ -12,13 +12,19 @@ try {
         Invoke-Checked 'git' @('add','.')
         Invoke-Checked 'git' @('commit','-m','Prepare open-source desktop helper and installer')
     }
-    $repoResult = & gh repo view $Repository --json name 2>&1
-    if ($LASTEXITCODE -ne 0) {
+    $savedPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $repoResult = & gh repo view $Repository --json name 2>&1; $repoExit = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $savedPreference }
+    if ($repoExit -ne 0) {
         Invoke-Checked 'gh' @('repo','create',$Repository,'--public','--source','.','--remote','origin','--push')
     } else {
-        $remote = & git remote get-url origin 2>$null
-        if ($LASTEXITCODE -ne 0) { Invoke-Checked 'git' @('remote','add','origin',"https://github.com/$Repository.git") }
-        elseif ($remote -notmatch ([regex]::Escape($Repository) + '(?:\.git)?$')) { throw 'Existing origin points to a different repository.' }
+        $remotes = @(& git remote)
+        if ('origin' -notin $remotes) { Invoke-Checked 'git' @('remote','add','origin',"https://github.com/$Repository.git") }
+        else {
+            $remote = & git remote get-url origin
+            if ($remote -notmatch ([regex]::Escape($Repository) + '(?:\.git)?$')) { throw 'Existing origin points to a different repository.' }
+        }
         # Git's normal fast-forward check protects existing repository history.
         Invoke-Checked 'git' @('push','-u','origin','main')
     }
