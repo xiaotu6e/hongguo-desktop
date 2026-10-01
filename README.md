@@ -1,8 +1,10 @@
 # 红果桌面助手 · Hongguo Desktop Helper
 
-Windows 上的 WSA 管理与红果短剧播放辅助工具。提供中文桌面界面、APK 拖拽安装、应用启动、自动横竖屏、播放窗口标题栏控制、滚轮切集和观看进度保护。
+**红果短剧 Windows 11 桌面播放助手：通过 WSA（类似安卓模拟器）运行安卓 APP 安装包（APK），支持无标题栏、无边框播放及 APP 提供的 1080P 高清，工具不额外转码或压缩音视频。**
 
-本仓库包含 Python/Flet 源码、Java 页面读取组件、C++ 窗口组件，以及安装、环境检查、WSA 兼容修复和恢复脚本。它只使用 WSA。
+简单理解：把红果短剧安卓 APP 装到 Windows 11 电脑上，直接在电脑里播放。WSA 是让安卓 APP 在 Windows 上运行的环境，使用方式类似模拟器；本助手为红果增加隐藏窗口外框、自动横竖屏、滚轮切集和观看进度保护，让播放窗口更简洁，也更适合鼠标操作。
+
+清晰度取决于 APP 和片源提供的档位。声音由 APP 和 WSA 播放，助手不额外压缩音频；目前没有验证整条播放链路是否达到“音频无损”。助手支持安装其他 APK，但上述播放辅助目前针对红果适配。APK 由用户自行提供。
 
 ![助手界面](docs/images/overview.png)
 
@@ -55,6 +57,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\doctor.ps1
 检查助手、WSA、ADB、连接和 APK。退出码 0 表示这些检查通过，2 表示缺失组件，3 表示连接需处理；**真实画面、声音、切集和横竖屏仍需确认**。
 
 ## 文档
+
+本仓库公开 Python/Flet 源码、Java 页面读取组件、C++ 窗口组件，以及安装、环境检查、WSA 兼容修复和恢复脚本。当前安卓运行环境只支持 WSA。
 
 - [安装、Agent 操作及断点恢复](docs/installation.md)
 - [使用方法](docs/usage.md)
