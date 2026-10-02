@@ -322,7 +322,7 @@ class DesktopApp:
         start_rule = ft.Dropdown(label="从推荐进入后的起播规则", value=self.settings.start_rule, width=330, disabled=self.busy,
             options=[ft.DropdownOption("smart", "智能从第 1 集开始"), ft.DropdownOption("keep", "保留红果当前集数")])
         protect = ft.Switch(label="保护本机已记录的观看进度", value=self.settings.protect_history, disabled=self.busy)
-        fullscreen = ft.Switch(label="自动全屏 / 清屏播放", value=self.settings.auto_fullscreen, disabled=self.busy)
+        fullscreen = ft.Switch(label="每部剧首次进入时自动全屏 / 清屏（可选）", value=self.settings.auto_fullscreen, disabled=self.busy)
         quality = ft.Dropdown(label="进入剧集时的清晰度", value=self.settings.preferred_quality, width=260, disabled=self.busy,
             options=[ft.DropdownOption("1080", "优先 1080P（默认）"), ft.DropdownOption("720", "优先 720P"), ft.DropdownOption("keep", "保持红果设置")])
         direct = ft.Switch(label="启动 / 连接时保持 WSA 直连", value=self.settings.keep_wsa_direct, disabled=self.busy)
@@ -438,7 +438,7 @@ class DesktopApp:
             self.text("红果播放窗口 · " + names[self.settings.window_mode], 16, weight=ft.FontWeight.W_600),
             ft.Row([self.button(label, action(mode), primary=mode == self.settings.window_mode)
                     for mode, label in names.items()], wrap=True),
-            self.text("自动模式：跟随红果的横屏 / 竖屏播放页调整窗口。开启追剧偏好中的自动全屏后，无需手动进入全屏。", 11, MUTED),
+            self.text("自动横竖屏只跟随 APP 播放方向调整窗口。默认手动点击全屏；可在追剧偏好中开启每部剧首次进入时自动全屏，退出后不会再次自动进入。", 11, MUTED),
             ft.Switch(label="隐藏白色标题栏", value=self.settings.hide_titlebar,
                       disabled=self.busy, on_change=hide_changed),
             self.text("按住画面顶部中间拖动窗口。滚轮向下/向上：推荐页换视频，竖屏和横屏剧集页切下一集/上一集，选集面板滚动列表。选择“退出工具”后恢复标题栏。", 12, MUTED),

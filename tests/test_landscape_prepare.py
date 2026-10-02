@@ -45,7 +45,7 @@ class LandscapePreparationTests(TestCase):
         self.addCleanup(self.directory.cleanup)
         self.prepare = Mock(return_value=True)
         self.helper = PlaybackAssistant(
-            Mock(settings=Settings(preferred_quality="keep", start_rule="keep")), Mock(),
+            Mock(settings=Settings(preferred_quality="keep", start_rule="keep", auto_fullscreen=True)), Mock(),
             WatchHistory(Path(self.directory.name)/"history.json"), prepare_landscape=self.prepare)
         self.helper.bridge = Mock()
         self.helper.bridge.click.return_value = True

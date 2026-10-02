@@ -108,6 +108,7 @@ class Entry:
     episode: int
     jump: bool
     reason: str
+    from_feed: bool = False
 
 
 class EntryPolicy:
@@ -134,11 +135,12 @@ class EntryPolicy:
             preview = self.preview
             self.preview = None  # This feed transition can only be consumed once.
             matches = bool(preview and now-preview[2] < 8 and preview[:2] == (screen.title, screen.episode))
-            self.pending = [screen.episode, now, matches]
+            from_feed = bool(preview and now-preview[2] < 8 and preview[0] == screen.title)
+            self.pending = [screen.episode, now, matches, from_feed]
         if self.decided:
             return None
         if screen.episode != self.pending[0]:
-            self.pending = [screen.episode, now, False]  # App resumed or user changed the episode.
+            self.pending = [screen.episode, now, False, self.pending[3]]  # App resumed or user changed the episode.
         # Only a possible rewind needs the full resume-protection interval.
         # A known series, different episode, or "keep" can never jump back.
         could_jump = (settings.start_rule == "smart" and self.pending[2] and screen.episode > 1
@@ -155,8 +157,8 @@ class EntryPolicy:
         elif screen.episode == 1:
             reason = "当前已经是第 1 集"
         else:
-            return Entry(screen.title, screen.episode, True, "推荐集数与进入集数一致")
-        return Entry(screen.title, screen.episode, False, reason)
+            return Entry(screen.title, screen.episode, True, "推荐集数与进入集数一致", self.pending[3])
+        return Entry(screen.title, screen.episode, False, reason, self.pending[3])
 
 
 class PlaybackAssistant:
@@ -173,6 +175,9 @@ class PlaybackAssistant:
         self.deadline = 0.0
         self.wait_until = 0.0
         self.fullscreen_done = False
+        # Retain choices across feed returns, minimization and bridge recovery.
+        # A series may receive automatic preparation only once in this session.
+        self.entered_titles: set[str] = set()
         self.quality_done = False
         self.quality_target = ""
         self.menu_owned = False
@@ -223,8 +228,15 @@ class PlaybackAssistant:
         self.manual_navigation_until = now+2
         self.policy.preview = None
         self.fast_until = now+1.2
+        self.consume_fullscreen()
         if self.landscape_preparing:
             self._finish_landscape(False, "manual_navigation")
+
+    def consume_fullscreen(self, title=""):
+        self.fullscreen_done = True
+        title = title or self.title or self.policy.active
+        if title:
+            self.entered_titles.add(title)
 
     def _clear_landscape(self):
         self.landscape_preparing = False
@@ -275,6 +287,8 @@ class PlaybackAssistant:
             self._record_landscape("fullscreen_unavailable")
             return False
         self.landscape_origin = (screen.kind, screen.title, screen.episode)
+        # Manual clicks remain available, but they consume any automatic attempt.
+        self.consume_fullscreen(screen.title)
         self.landscape_manual = manual
         self.landscape_mode = self.manager.settings.window_mode
         self.landscape_ready_at = None
@@ -401,7 +415,9 @@ class PlaybackAssistant:
             self.cancel_menu = self.menu_owned
             self.quality_done = False
             self.quality_attempts = 0
-            self.fullscreen_done = False
+            # Changing quality or opting in must not reopen the current player.
+            # Automatic fullscreen applies only to the next new series entry.
+            self.consume_fullscreen()
             if self.title and self.stage not in {"jump", "first"}:
                 self.stage = "prepare"
                 self.deadline = time.monotonic()+15
@@ -426,8 +442,15 @@ class PlaybackAssistant:
         now = time.monotonic() if now is None else now
         settings = self.manager.settings
         self.settings_changed()
+        previous = self.screen
         self.snapshot_data = self.bridge.snapshot()
         screen = self.screen = read_screen(self.snapshot_data)
+        if previous.landscape and not screen.landscape:
+            self.consume_fullscreen()
+        if screen.kind in {"episodes", "quality"} and not self.menu_owned:
+            self.consume_fullscreen()
+        if screen.kind == "player" and (screen.landscape or not screen.ident("d4")):
+            self.consume_fullscreen()
         if self.landscape_preparing:
             self._advance_landscape(screen, now)
             return
@@ -452,11 +475,15 @@ class PlaybackAssistant:
                 return
             entry = self.policy.observe(screen, now, settings, self.history.contains(screen.title))
             if entry:
+                returning = entry.title in self.entered_titles
+                self.entered_titles.add(entry.title)
                 self.title, self.episode = entry.title, entry.episode
                 self.stage = "jump" if entry.jump else "prepare"
                 self.deadline = now + 15
                 self.landscape_content = bool(screen.text("全屏观看")) or screen.landscape
-                self.quality_done = self.fullscreen_done = self.menu_owned = False
+                self.quality_done = False
+                self.fullscreen_done = returning or not entry.from_feed
+                self.menu_owned = False
                 self.quality_attempts = 0
                 self.emit(f"《{entry.title}》：{entry.reason}")
                 if not entry.jump:
@@ -548,7 +575,7 @@ class PlaybackAssistant:
                 # The same menu already offers portrait clean-screen playback.
                 # Use it directly instead of closing and reopening controls.
                 clean = screen.text("清屏播放")
-                if settings.auto_fullscreen and not self.landscape_content and clean:
+                if settings.auto_fullscreen and not self.fullscreen_done and not self.landscape_content and clean:
                     if self.click(clean, now):
                         self.quality_done = self.fullscreen_done = True
                         self.menu_owned, self.stage = False, ""

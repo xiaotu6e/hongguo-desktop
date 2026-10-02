@@ -1,6 +1,6 @@
 [project]
 name = "hongguo_desktop"
-version = "0.1.0"
+version = "0.1.1"
 description = "Android desktop launcher and APK installer"
 requires-python = ">=3.11"
 dependencies = ["flet[desktop]==1.0.1", "flet-dropzone==0.4.0", "apkutils==3.0.0"]

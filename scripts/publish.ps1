@@ -1,4 +1,4 @@
-﻿param([string]$Repository = 'xiaotu6e/hongguo-desktop', [switch]$WithRelease, [string]$Version = 'v0.1.0')
+﻿param([string]$Repository = 'xiaotu6e/hongguo-desktop', [switch]$WithRelease, [string]$Version = 'v0.1.1')
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Invalid repository name.' }

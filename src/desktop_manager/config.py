@@ -28,7 +28,7 @@ class Settings:
     hide_titlebar: bool = True
     start_rule: str = "smart"
     protect_history: bool = True
-    auto_fullscreen: bool = True
+    auto_fullscreen: bool = False
     preferred_quality: str = "1080"
     keep_wsa_direct: bool = True
     favorite: str = HONGGUO

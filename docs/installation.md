@@ -59,10 +59,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -ApkPa
 对应 Release 发布后，使用匹配版本的源码标签及 `manifests/release.json`：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.0 -Launch
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.1 -Launch
 ```
 
-从默认仓库下载对应成品并校验；可用 `-Repository 'owner/repo'` 指定镜像仓库。预先下载的成品可传 `-BundlePath 'C:\Downloads\hongguo-desktop-v0.1.0-windows-x64.zip'`。
+从默认仓库下载对应成品并校验；可用 `-Repository 'owner/repo'` 指定镜像仓库。预先下载的成品可传 `-BundlePath 'C:\Downloads\hongguo-desktop-v0.1.1-windows-x64.zip'`。
 
 成品按版本放入 `%LOCALAPPDATA%\HongguoDesktopHelper\program`，不覆盖观看记录。已有进程应先从助手的“退出工具”关闭，再启动新版本。
 

@@ -8,6 +8,8 @@
 - **无边框播放**：隐藏 Windows 标题栏与外框，保留完整画面；拖动画面顶部即可移动窗口。
 - **电脑追剧操作**：跟随视频自动横竖屏，鼠标滚轮切换推荐视频或剧集，保护已记录的观看进度。
 
+默认手动点击 APP 的全屏按钮。“自动横竖屏”只调整窗口方向；可选的自动全屏仅在每部剧首次进入时触发，退出后不会把你重新切回全屏。
+
 ## 实际播放效果
 
 ### 横屏无边框播放
@@ -73,10 +75,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Insta
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -DryRun -InstallWsa -RepairWsa -Launch
 ```
 
-已发布 [v0.1.0 成品和源码包](https://github.com/xiaotu6e/hongguo-desktop/releases/tag/v0.1.0)，可跳过 Python 环境安装：
+已发布 [v0.1.1 成品和源码包](https://github.com/xiaotu6e/hongguo-desktop/releases/tag/v0.1.1)，修复退出全屏后重复进入的问题，可跳过 Python 环境安装：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.0 -Launch
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.1 -Launch
 ```
 
 成品下载和源码入口分别在仓库的 Releases 和 Code 页面；安装脚本依照 `manifests/release.json` 校验成品。已有 WSA/APK 的用户也可将成品 ZIP 解压到固定目录后，双击 hongguo_desktop.exe。

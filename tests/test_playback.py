@@ -186,7 +186,7 @@ class ScreenTests(unittest.TestCase):
 
     def test_quality_auto_closes_no_extra_back_and_fullscreen_is_immediate(self):
         with tempfile.TemporaryDirectory() as directory:
-            helper = PlaybackAssistant(Mock(settings=Settings()), Mock(), WatchHistory(Path(directory)/"history.json"))
+            helper = PlaybackAssistant(Mock(settings=Settings(auto_fullscreen=True)), Mock(), WatchHistory(Path(directory)/"history.json"))
             helper.bridge = Mock()
             helper.bridge.snapshot.return_value = self.fixture("automation-player")
             helper.title, helper.stage, helper.menu_owned = "测试剧", "quality_wait", True
@@ -198,7 +198,7 @@ class ScreenTests(unittest.TestCase):
 
     def test_portrait_clean_uses_same_quality_menu(self):
         with tempfile.TemporaryDirectory() as directory:
-            helper = PlaybackAssistant(Mock(settings=Settings()), Mock(), WatchHistory(Path(directory)/"history.json"))
+            helper = PlaybackAssistant(Mock(settings=Settings(auto_fullscreen=True)), Mock(), WatchHistory(Path(directory)/"history.json"))
             helper.bridge = Mock()
             helper.bridge.snapshot.return_value = self.fixture("automation-more")
             helper.title, helper.stage, helper.menu_owned = "测试剧", "quality_wait", True
