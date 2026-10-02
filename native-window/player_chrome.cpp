@@ -5,6 +5,7 @@
 #include <atomic>
 #include <cstdlib>
 #include <cwchar>
+#include "resize_geometry.h"
 
 // WSA's own F11 mode hides its composition-based title bar. We keep the
 // resulting borderless window at its content size, without copying video.
@@ -17,6 +18,8 @@ static RECT requested{}, lastGrip{};
 static RECT dragWindow{};
 static POINT dragPointer{};
 static bool dragging = false;
+static int resizeEdge = hongguo::None;
+static RECT dragWork{};
 static ULONGLONG transitionStarted = 0;
 static int captionDip = 30;
 static const wchar_t* CLASS_NAME = L"HongguoPlayerDragArea";
@@ -52,6 +55,28 @@ static bool SameTarget() {
     return IsWindow(target) && GetWindowThreadProcessId(target, &pid) && pid == targetPid;
 }
 static bool HasCaption() { return (GetWindowLongPtrW(target, GWL_STYLE) & WS_CAPTION) != 0; }
+static int EdgeAt(POINT point) {
+    RECT r{};
+    if (!hideTitlebar || entering || !SameTarget() || HasCaption() || IsZoomed(target) ||
+        !GetWindowRect(target, &r)) return hongguo::None;
+    UINT dpi = GetDpiForWindow(target); if (!dpi) dpi = 96;
+    return hongguo::ResizeEdge({r.left, r.top, r.right, r.bottom}, point.x, point.y,
+                              MulDiv(6, dpi, 96), MulDiv(12, dpi, 96));
+}
+static void RememberSize() {
+    RECT r{};
+    if (!resizeEdge || !SameTarget() || !GetWindowRect(target, &r)) return;
+    UINT dpi = GetDpiForWindow(target); if (!dpi) dpi = 96;
+    const wchar_t* name = r.right-r.left > r.bottom-r.top ?
+        L"HongguoLandscapeHeightDip" : L"HongguoPortraitHeightDip";
+    SetPropW(target, name, reinterpret_cast<HANDLE>(static_cast<INT_PTR>(MulDiv(r.bottom-r.top, 96, dpi))));
+}
+static void CancelDrag() {
+    if (dragging) RememberSize();
+    dragging = false;
+    resizeEdge = hongguo::None;
+    if (GetCapture() == grip) ReleaseCapture();
+}
 static bool ContentRect(RECT& area) {
     if (!SameTarget() || !GetWindowRect(target, &area)) return false;
     if (HasCaption()) {
@@ -166,10 +191,12 @@ static void Sync() {
         PostQuitMessage(0); syncing = false; return;
     }
     if (IsIconic(target) || !IsWindowVisible(target)) {
+        CancelDrag();
         UpdateFullscreenHitRect();
         ShowWindow(grip, SW_HIDE); syncing = false; return;
     }
     if (!hideTitlebar) {
+        CancelDrag();
         Restore();
         ShowWindow(grip, SW_HIDE);
         lastGrip = {};
@@ -192,17 +219,22 @@ static void Sync() {
     GetWindowRect(target, &area);
     UINT dpi = GetDpiForWindow(target);
     if (!dpi) dpi = 96;
-    area.bottom = area.top + MulDiv(18, dpi, 96);
     HWND aboveTarget = GetWindow(target, GW_HWNDPREV);
     if (!EqualRect(&area, &lastGrip) || !IsWindowVisible(grip) || aboveTarget != grip) {
         int width = area.right-area.left, height = area.bottom-area.top;
         int inset = std::min(MulDiv(72, dpi, 96), width/4);
-        // Central drag area and a 3-DIP edge prevent WSA's hover title overlay.
-        // Back / menu controls below the edge at both sides still receive input.
-        HRGN region = CreateRectRgn(inset, 0, width-inset, height);
-        HRGN edge = CreateRectRgn(0, 0, width, MulDiv(3, dpi, 96));
-        CombineRgn(region, region, edge, RGN_OR);
-        DeleteObject(edge);
+        int border = MulDiv(6, dpi, 96), corner = MulDiv(12, dpi, 96);
+        // Only a thin perimeter and the existing central move strip receive
+        // input. The video and APP controls in the interior remain untouched.
+        HRGN region = CreateRectRgn(0, 0, width, height);
+        HRGN interior = CreateRectRgn(border, border, width-border, height-border);
+        CombineRgn(region, region, interior, RGN_DIFF); DeleteObject(interior);
+        HRGN move = CreateRectRgn(inset, 0, width-inset, MulDiv(18, dpi, 96));
+        CombineRgn(region, region, move, RGN_OR); DeleteObject(move);
+        for (int x : {0, width-corner}) for (int y : {0, height-corner}) {
+            HRGN area = CreateRectRgn(x, y, x+corner, y+corner);
+            CombineRgn(region, region, area, RGN_OR); DeleteObject(area);
+        }
         if (!SetWindowRgn(grip, region, FALSE)) DeleteObject(region);
         // F11 reorders WSA above owned windows. Put the grip immediately above
         // WSA, never globally topmost over other applications.
@@ -373,9 +405,14 @@ static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPA
         }
         return 0;
     case WM_LBUTTONDOWN: {
+        if (!SameTarget() || entering || HasCaption() || IsZoomed(target)) return 0;
         pendingWheel = wheelRemainder = 0;
         GetCursorPos(&dragPointer);
         GetWindowRect(target, &dragWindow);
+        resizeEdge = EdgeAt(dragPointer);
+        MONITORINFO monitor{sizeof(MONITORINFO)};
+        if (!GetMonitorInfoW(MonitorFromWindow(target, MONITOR_DEFAULTTONEAREST), &monitor)) return 0;
+        dragWork = monitor.rcWork;
         SetForegroundWindow(target);
         SetCapture(window);
         dragging = true;
@@ -391,22 +428,43 @@ static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPA
         if (dragging && SameTarget()) {
             POINT point{};
             GetCursorPos(&point);
-            SetWindowPos(target, nullptr, dragWindow.left + point.x-dragPointer.x,
-                         dragWindow.top + point.y-dragPointer.y, 0, 0,
-                         SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            if (resizeEdge) {
+                UINT dpi = GetDpiForWindow(target); if (!dpi) dpi = 96;
+                auto r = hongguo::ResizeRect({dragWindow.left, dragWindow.top, dragWindow.right, dragWindow.bottom},
+                    {dragWork.left, dragWork.top, dragWork.right, dragWork.bottom}, resizeEdge,
+                    point.x-dragPointer.x, point.y-dragPointer.y, MulDiv(180, dpi, 96));
+                SetWindowPos(target, nullptr, r.left, r.top, r.right-r.left, r.bottom-r.top,
+                             SWP_NOZORDER | SWP_NOACTIVATE);
+            } else {
+                SetWindowPos(target, nullptr, dragWindow.left + point.x-dragPointer.x,
+                             dragWindow.top + point.y-dragPointer.y, 0, 0,
+                             SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            }
             Sync();
         }
         return 0;
     case WM_LBUTTONUP:
+        if (dragging) RememberSize();
         if (dragging) ReleaseCapture();
         dragging = false;
+        resizeEdge = hongguo::None;
         return 0;
     case WM_CAPTURECHANGED:
+        if (dragging) RememberSize();
         dragging = false;
+        resizeEdge = hongguo::None;
         return 0;
     case WM_MOUSEACTIVATE: return MA_NOACTIVATE;
-    case WM_SETCURSOR:
-        SetCursor(LoadCursorW(nullptr, IDC_SIZEALL)); return TRUE;
+    case WM_SETCURSOR: {
+        POINT point{}; GetCursorPos(&point);
+        int edge = dragging ? resizeEdge : EdgeAt(point);
+        LPCWSTR cursor = IDC_SIZEALL;
+        if (edge == hongguo::Left || edge == hongguo::Right) cursor = IDC_SIZEWE;
+        else if (edge == hongguo::Top || edge == hongguo::Bottom) cursor = IDC_SIZENS;
+        else if (edge == (hongguo::Left | hongguo::Top) || edge == (hongguo::Right | hongguo::Bottom)) cursor = IDC_SIZENWSE;
+        else if (edge) cursor = IDC_SIZENESW;
+        SetCursor(LoadCursorW(nullptr, cursor)); return TRUE;
+    }
     case WM_TIMER: Sync(); return 0;
     case WM_CLOSE:
     case WM_DESTROY: PostQuitMessage(0); return 0;

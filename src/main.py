@@ -425,7 +425,7 @@ class DesktopApp:
                 self.settings.hide_titlebar = enabled
                 self.chrome_retry_after = 0.0
                 self.last_window_layout = None
-                self.events.put("已开启隐藏标题栏：按住画面顶部中间拖动" if enabled else "已恢复标准标题栏")
+                self.events.put("已开启无边框：顶部中间移动，边缘或角落等比例缩放" if enabled else "已恢复标准标题栏")
             await self.perform("更新播放窗口外观", apply)
         async def close_player(_):
             def close():
@@ -441,7 +441,7 @@ class DesktopApp:
             self.text("自动横竖屏只跟随 APP 播放方向调整窗口。默认手动点击全屏；可在追剧偏好中开启每部剧首次进入时自动全屏，退出后不会再次自动进入。", 11, MUTED),
             ft.Switch(label="隐藏白色标题栏", value=self.settings.hide_titlebar,
                       disabled=self.busy, on_change=hide_changed),
-            self.text("按住画面顶部中间拖动窗口。滚轮向下/向上：推荐页换视频，竖屏和横屏剧集页切下一集/上一集，选集面板滚动列表。选择“退出工具”后恢复标题栏。", 12, MUTED),
+            self.text("顶部中间拖动可移动窗口；拖动四条边或四个角可等比例缩放，横屏 16:9、竖屏 9:16，各自记住本次窗口的尺寸。滚轮切视频 / 切集，选集面板滚动列表。退出工具后恢复标题栏。", 12, MUTED),
             self.button("关闭红果窗口", close_player, ft.Icons.CLOSE_ROUNDED),
         ])
 

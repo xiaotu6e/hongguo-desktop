@@ -44,6 +44,29 @@ class PlaybackWindowTests(unittest.TestCase):
         self.assertTrue(window.resize(42,PlayerLayout(True,1600,900),True))
         window.user.SetWindowPos.assert_called_once_with(42,None,24,300,1600,900,0x14)
 
+    def test_user_landscape_size_is_used_instead_of_default_after_orientation_switch(self):
+        window=self.window()
+        window.user.GetPropW.return_value=360
+        self.assertTrue(window.resize(42,PlayerLayout(True,1600,900),True))
+        call=window.user.SetWindowPos.call_args.args
+        self.assertEqual(call[4:6],(960,540))
+        window.user.GetPropW.assert_called_once_with(42,'HongguoLandscapeHeightDip')
+
+    def test_user_portrait_size_is_independent_from_landscape_size(self):
+        window=self.window()
+        window.user.GetPropW.return_value=640
+        self.assertTrue(window.resize(42,PlayerLayout(False,692,1230),False))
+        self.assertEqual(window.user.SetWindowPos.call_args.args[4:6],(540,960))
+        window.user.GetPropW.assert_called_once_with(42,'HongguoPortraitHeightDip')
+
+    def test_saved_size_is_fitted_to_smaller_monitor(self):
+        window=self.window()
+        window.user.GetPropW.return_value=4000
+        self.assertTrue(window.resize(42,PlayerLayout(False,692,1230),False))
+        args=window.user.SetWindowPos.call_args.args
+        self.assertLessEqual(args[3]+args[5],2096)
+        self.assertLessEqual(abs(args[4]-args[5]*9/16),.51)
+
 
 if __name__=='__main__':
     unittest.main()

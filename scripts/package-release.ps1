@@ -1,4 +1,4 @@
-﻿param([Parameter(Mandatory=$true)][string]$AppDirectory, [string]$Version = 'v0.1.1')
+﻿param([Parameter(Mandatory=$true)][string]$AppDirectory, [string]$Version = 'v0.1.2')
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 if ($Version -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$') { throw 'Invalid version.' }

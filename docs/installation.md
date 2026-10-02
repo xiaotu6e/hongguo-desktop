@@ -65,10 +65,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -ApkPa
 这是 Agent 默认选择的安装方式，无需安装 Python。使用带有匹配清单的仓库版本及 `manifests/release.json`：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.1 -Launch
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.2 -Launch
 ```
 
-从默认仓库下载对应成品并校验；可用 `-Repository 'owner/repo'` 指定镜像仓库。预先下载的成品可传 `-BundlePath 'C:\Downloads\hongguo-desktop-v0.1.1-windows-x64.zip'`。
+从默认仓库下载对应成品并校验；可用 `-Repository 'owner/repo'` 指定镜像仓库。预先下载的成品可传 `-BundlePath 'C:\Downloads\hongguo-desktop-v0.1.2-windows-x64.zip'`。
 
 成品按版本放入 `%LOCALAPPDATA%\HongguoDesktopHelper\program`，不覆盖观看记录。已有进程应先从助手的“退出工具”关闭，再启动新版本。
 

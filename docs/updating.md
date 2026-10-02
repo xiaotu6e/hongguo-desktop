@@ -29,7 +29,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update-plan.ps1 -C
 在获取了当前清单的仓库目录中，按清单指定版本安装。例如当前成品：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.1 -Launch
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.2 -Launch
 ```
 
 安装器会验证 ZIP 的 SHA-256，部署到新的版本目录，记录安装信息，并创建指向新版本的桌面 / 开始菜单快捷方式。已有 WSA 和 APP 保留；普通助手更新不添加 `-InstallWsa`、`-RepairWsa` 或 `-ApkPath`。
@@ -57,6 +57,8 @@ WSA、红果 APK、账号、观看记录、Java / C++ 组件与依赖版本无�
 核对实际启动进程路径、EXE 版本或源码入口提交，以及原快捷方式目标，再执行 `scripts/doctor.ps1 -Json`。安装记录版本只是检查线索；仅拉取仓库不能证明旧成品已经更新。
 
 给用户的结果应包含：当前已运行的版本、实际更新的组件、保留的数据、本次使用变化和需要用户完成的系统步骤。v0.1.1 可检查：手动进入播放、退出、打开选集，再次手动进入；期间不应自动强制全屏。
+
+v0.1.2 还需更新完整助手中的 C++ 窗口组件。分别在横屏与竖屏拖动一条边和一个角，检查窗口确实变大 / 变小、维持 16:9 / 9:16、放开鼠标后尺寸不跳回。WSA、APK、Java 组件与依赖无需因此升级。
 
 ## 每次发布如何维护
 

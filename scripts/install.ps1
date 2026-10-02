@@ -1,6 +1,6 @@
 ﻿param(
     [ValidateSet('Source','Release')][string]$Mode = 'Source',
-    [string]$Version = 'v0.1.1',
+    [string]$Version = 'v0.1.2',
     [string]$Repository = 'xiaotu6e/hongguo-desktop',
     [string]$PythonPath = '',
     [string]$BundlePath = '',

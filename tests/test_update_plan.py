@@ -35,14 +35,14 @@ class UpdatePlanTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         plan = json.loads(result.stdout)
         self.assertEqual(plan['status'], 'update_required')
-        self.assertEqual([c['version'] for c in plan['changes']], ['v0.1.1'])
-        self.assertEqual({c['id'] for c in plan['components_to_update_or_review']}, {'helper', 'settings'})
+        self.assertEqual([c['version'] for c in plan['changes']], ['v0.1.1', 'v0.1.2'])
+        self.assertEqual({c['id'] for c in plan['components_to_update_or_review']}, {'helper', 'settings', 'native_window'})
         self.assertIn('WSA', plan['changes'][0]['unchanged_components'])
         self.assertTrue(plan['must_verify_actual_executable_or_source'])
         self.assertFalse(plan['modifies_system'])
 
     def test_same_version_reports_documentation_changes_without_helper_reinstall(self):
-        result = self.run_plan('-CurrentVersion', '0.1.1')
+        result = self.run_plan('-CurrentVersion', '0.1.2')
         self.assertEqual(result.returncode, 0, result.stderr)
         plan = json.loads(result.stdout)
         self.assertEqual(plan['status'], 'current')
@@ -78,7 +78,15 @@ class UpdatePlanTests(unittest.TestCase):
         result = self.run_plan('-CurrentVersion', 'v0.0.1')
         self.assertEqual(result.returncode, 0, result.stderr)
         plan = json.loads(result.stdout)
-        self.assertEqual([c['version'] for c in plan['changes']], ['v0.1.0', 'v0.1.1'])
+        self.assertEqual([c['version'] for c in plan['changes']], ['v0.1.0', 'v0.1.1', 'v0.1.2'])
+
+    def test_v011_upgrade_updates_native_window_without_reinstalling_wsa_or_apk(self):
+        result = self.run_plan('-CurrentVersion', 'v0.1.1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plan = json.loads(result.stdout)
+        self.assertEqual([c['version'] for c in plan['changes']], ['v0.1.2'])
+        self.assertEqual({c['id'] for c in plan['components_to_update_or_review']}, {'helper', 'native_window'})
+        self.assertIn('WSA', plan['changes'][0]['unchanged_components'])
 
     def test_invalid_version_fails_without_mutation(self):
         result = self.run_plan('-CurrentVersion', 'latest')

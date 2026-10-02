@@ -38,7 +38,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Prepare
 为已有成品制作发布包：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package-release.ps1 -AppDirectory 'C:\path\to\app' -Version v0.1.1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package-release.ps1 -AppDirectory 'C:\path\to\app' -Version v0.1.2
 ```
 
 打包 ZIP 时间戳会影响哈希，因此每次打包后的 `manifests/release.json` 必须与上传的 ZIP 对应。不要用一次构建的清单校验另一次构建的 ZIP。
@@ -63,10 +63,10 @@ gh repo create hongguo-desktop --public --source . --remote origin --push
 
 ```powershell
 git add manifests/release.json
-git commit -m "Record v0.1.1 release checksum"
-git tag v0.1.1
-git push origin main v0.1.1
-gh release create v0.1.1 .\dist\hongguo-desktop-v0.1.1-windows-x64.zip .\dist\SHA256SUMS.txt .\dist\release.json --title "红果桌面助手 v0.1.1" --notes-file .\docs\release-notes.md
+git commit -m "Record v0.1.2 release checksum"
+git tag v0.1.2
+git push origin main v0.1.2
+gh release create v0.1.2 .\dist\hongguo-desktop-v0.1.2-windows-x64.zip .\dist\SHA256SUMS.txt .\dist\release.json --title "红果桌面助手 v0.1.2" --notes-file .\docs\release-notes.md
 ```
 
 附带 GitHub Actions CI，运行离线测试和 PowerShell 解析检查。发布成品先人工核对版本、实际播放与第三方 NOTICE。更新发行版时同时更新对应校验清单和兼容性文档。

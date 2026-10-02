@@ -30,13 +30,14 @@ def player_layout(output: str) -> PlayerLayout | None:
 
 
 def fitted_rect(work: tuple[int, int, int, int], current: tuple[int, int, int, int],
-                landscape: bool, dpi: int, chrome: tuple[int, int]) -> tuple[int, int, int, int]:
+                landscape: bool, dpi: int, chrome: tuple[int, int],
+                height_dip: int | None = None) -> tuple[int, int, int, int]:
     left, top, right, bottom = work
     margin = max(8, round(16 * dpi / 96))
     available_w = right - left - 2 * margin - chrome[0]
     available_h = bottom - top - 2 * margin - chrome[1]
     ratio = 16 / 9 if landscape else 9 / 16
-    target_h = round((600 if landscape else 820) * dpi / 96)
+    target_h = round((height_dip if height_dip is not None else 600 if landscape else 820) * dpi / 96)
     height = max(1, min(target_h, available_h, int(available_w / ratio)))
     width = round(height * ratio) + chrome[0]
     height += chrome[1]
@@ -62,6 +63,8 @@ class WsaPlayerWindow:
         self.user.GetWindowLongPtrW.argtypes = [wt.HWND, ctypes.c_int]
         self.user.GetWindowLongPtrW.restype = ctypes.c_ssize_t
         self.user.GetDpiForWindow.argtypes = [wt.HWND]
+        self.user.GetPropW.argtypes = [wt.HWND, wt.LPCWSTR]
+        self.user.GetPropW.restype = ctypes.c_size_t
         self.user.MonitorFromWindow.argtypes = [wt.HWND, wt.DWORD]
         self.user.MonitorFromWindow.restype = wt.HANDLE
         self.user.GetMonitorInfoW.argtypes = [wt.HANDLE, ctypes.c_void_p]
@@ -135,7 +138,10 @@ class WsaPlayerWindow:
             if not self.user.GetMonitorInfoW(monitor, ctypes.byref(info)):
                 raise OSError("读取屏幕范围失败")
             work = (info.work.left, info.work.top, info.work.right, info.work.bottom)
-            x, y, width, height = fitted_rect(work, current, landscape, dpi, chrome)
+            height_dip = self.user.GetPropW(hwnd, "HongguoLandscapeHeightDip" if landscape else "HongguoPortraitHeightDip")
+            if not isinstance(height_dip, int) or not 120 <= height_dip <= 4000:
+                height_dip = None
+            x, y, width, height = fitted_rect(work, current, landscape, dpi, chrome, height_dip)
             if current == (x, y, x+width, y+height):
                 return True
             # SWP_NOZORDER | SWP_NOACTIVATE: keep focus where the user left it.
