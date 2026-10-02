@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "latest_helper_version": "v0.1.1",
+  "documentation_updated_at": "2026-10-02",
+  "documentation_changes": [
+    "增加逐版本更新记录、Agent 安装与更新提示词、只读组件更新计划",
+    "补充无边框小窗与管理工具同屏实拍，说明边看短剧边办公的用途"
+  ],
+  "releases": [
+    {
+      "version": "v0.1.0",
+      "date": "2026-10-01",
+      "summary": "首个公开版本：Windows WSA / APK 安装与无边框播放助手",
+      "components": [
+        {"id": "helper", "action": "install", "reason": "安装完整助手成品或源码环境"},
+        {"id": "wsa", "action": "check_or_install", "reason": "缺少时安装固定版本 WSA；已有可用环境则复用"},
+        {"id": "apk", "action": "check_or_install", "reason": "缺少红果时安装用户提供的 APK；已有 APP 则复用"}
+      ],
+      "unchanged_components": [],
+      "preserve": ["现有 WSA 和已安装 APP", "账号与应用数据", "观看记录"]
+    },
+    {
+      "version": "v0.1.1",
+      "date": "2026-10-02",
+      "summary": "修复退出全屏后重复进入；新安装默认手动，可选自动模式每部剧首次触发一次",
+      "components": [
+        {"id": "helper", "action": "replace_complete_helper", "reason": "更新播放辅助、默认设置和设置界面；成品替换完整目录"},
+        {"id": "settings", "action": "review_auto_fullscreen", "reason": "旧设置保留；希望手动控制时，仅关闭 auto_fullscreen"}
+      ],
+      "unchanged_components": ["WSA", "红果 APP / APK", "Java 页面读取组件", "C++ 窗口组件", "Python 依赖版本"],
+      "preserve": ["WSA 安卓环境", "红果账号与应用数据", "观看记录", "其他助手设置"]
+    }
+  ]
+}

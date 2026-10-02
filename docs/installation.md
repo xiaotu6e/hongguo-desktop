@@ -1,5 +1,11 @@
 # 安装与分享
 
+## 推荐入口：复制给 Agent
+
+使用 [通用安装提示词](agent-prompts.md#安装提示词)，让有本机执行能力的 Codex、DSH 或豆包等 Agent 调用本仓库并完成安装。Agent 负责检查环境、校验下载、安装助手、处理 WSA / APK 连接、创建快捷方式和启动；安装完成后日常使用快捷方式。
+
+单独下载 EXE 或 ZIP 不会准备安卓环境和红果 APP。以下命令供 Agent 执行与排查；普通用户直接复制提示词即可。已有用户使用 [更新提示词](agent-prompts.md#更新提示词)，先查看 [更新记录](../CHANGELOG.md)。
+
 ## 使用前准备
 
 运行平台为 Windows 11 x64。硬件虚拟化需在 BIOS/UEFI 中开启；WSA 需要 Windows 的 VirtualMachinePlatform 功能和 NTFS 安装磁盘。源码方式需要 Python 3.11+；安装 Git 是使用 git clone 的前提，也可以通过 GitHub 的 Code → Download ZIP 下载源码并解压。
@@ -56,7 +62,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -ApkPa
 
 ## 成品方式
 
-对应 Release 发布后，使用匹配版本的源码标签及 `manifests/release.json`：
+这是 Agent 默认选择的安装方式，无需安装 Python。使用带有匹配清单的仓库版本及 `manifests/release.json`：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.1 -Launch
@@ -82,6 +88,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\doctor.ps1 -Json
 
 ## 如何分享
 
-分享仓库链接供查看代码；分享 Releases 页面供下载成品；将 README 中的 Agent 安装指令一起复制给使用者。安装不要求 GitHub 写入权限。
+分享仓库链接，并附上 README 或 [提示词文档](agent-prompts.md) 中完整的 Agent 安装提示词。使用者复制给自己的本机 Agent 即可开始。Releases 提供给 Agent 校验和安装成品；安装不要求 GitHub 写入权限。
 
 Agent 必须在使用者的 Windows 本机有终端执行能力。云端代码审查 Agent 无法替该电脑安装 WSA。系统授权、账号登录和真实播放确认仍由使用者完成。

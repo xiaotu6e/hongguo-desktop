@@ -70,3 +70,9 @@ gh release create v0.1.1 .\dist\hongguo-desktop-v0.1.1-windows-x64.zip .\dist\SH
 ```
 
 附带 GitHub Actions CI，运行离线测试和 PowerShell 解析检查。发布成品先人工核对版本、实际播放与第三方 NOTICE。更新发行版时同时更新对应校验清单和兼容性文档。
+
+## 更新记录与组件提示
+
+每次修改同步 `CHANGELOG.md`，让用户看懂具体行为变化和需要更新的地方。程序版本更新同时维护 `manifests/updates.json`，记录助手、设置、WSA、APK、Java / C++ 组件及依赖是否需要处理；`scripts/update-plan.ps1` 会对当前版本到目标版本的变化生成只读计划供 Agent 报告。
+
+文档或 Agent 脚本修改单独记录日期，不更改未重新构建的助手成品版本。已发布标签、ZIP 和校验值不重写；新的程序版本使用新标签、新成品与匹配清单。执行流程见 [更新操作说明](updating.md)。
