@@ -1,10 +1,9 @@
 {
   "schema_version": 1,
-  "latest_helper_version": "v0.1.2",
-  "documentation_updated_at": "2026-10-02",
+  "latest_helper_version": "v0.1.8",
+  "documentation_updated_at": "2026-10-03",
   "documentation_changes": [
-    "补充无边框横屏 / 竖屏边缘等比例缩放操作",
-    "使用当前真实桌面壁纸、临时隐藏图标与其他应用后重新实拍"
+    "更新 v0.1.8 的安装、使用与组件说明"
   ],
   "releases": [
     {
@@ -38,7 +37,7 @@
     {
       "version": "v0.1.1",
       "date": "2026-10-02",
-      "summary": "修复退出全屏后重复进入；新安装默认手动，可选自动模式每部剧首次触发一次",
+      "summary": "默认手动全屏，可选自动模式每部剧首次进入时生效",
       "components": [
         {
           "id": "helper",
@@ -85,6 +84,44 @@
         "WSA",
         "红果 APP / APK",
         "Java 页面读取组件",
+        "Python 依赖版本"
+      ],
+      "preserve": [
+        "WSA 安卓环境",
+        "红果账号与应用数据",
+        "观看记录",
+        "助手设置"
+      ]
+    },
+    {
+      "version": "v0.1.8",
+      "date": "2026-10-03",
+      "summary": "播放与后台联动：自动恢复后台，主动退出同时关闭播放器",
+      "components": [
+        {
+          "id": "helper",
+          "action": "replace_complete_helper",
+          "reason": "安装完整 v0.1.8 助手目录"
+        },
+        {
+          "id": "native_window",
+          "action": "update_bundled_companion",
+          "reason": "随完整助手更新窗口与播放控制组件"
+        },
+        {
+          "id": "android_bridge",
+          "action": "update_bundled_companion",
+          "reason": "随完整助手更新页面读取组件"
+        },
+        {
+          "id": "guardian",
+          "action": "install_bundled_launcher",
+          "reason": "原快捷方式指向 helper-guardian.exe，图标使用 hongguo_desktop.exe"
+        }
+      ],
+      "unchanged_components": [
+        "WSA",
+        "红果 APP / APK",
         "Python 依赖版本"
       ],
       "preserve": [

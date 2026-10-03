@@ -13,6 +13,78 @@ from desktop_manager.config import Settings
 
 
 class WindowInputTests(TestCase):
+    def test_original_fullscreen_click_is_only_observed_and_never_replayed(self):
+        playback=Mock();chrome=Mock()
+        chrome.take_fullscreen.return_value='observed'
+        playback.observe_fullscreen_click.return_value={'ok':True,'method':'fullscreen_observed'}
+        self.assertEqual(WindowInput(playback,chrome).dispatch()['method'],'fullscreen_observed')
+        playback.observe_fullscreen_click.assert_called_once_with()
+        playback.request_landscape.assert_not_called()
+        playback.bridge.click.assert_not_called()
+        chrome.take_wheel.assert_not_called()
+
+    def test_only_initialized_player_passes_the_real_click_to_wsa(self):
+        for kind,ready in [('player',True),('player',False),('feed',True)]:
+            with self.subTest(kind=kind,ready=ready):
+                chrome=Mock()
+                playback=Mock(screen=Screen(kind,'剧名',53,self.overlap_nodes()))
+                input=WindowInput(playback,chrome,lambda:ready)
+                rect=input.refresh_targets()
+                if kind=='player' and ready:
+                    chrome.set_fullscreen_target.assert_called_once_with(rect,passthrough=True)
+                else:
+                    chrome.set_fullscreen_target.assert_called_once_with(rect)
+                input.clear_targets()
+                self.assertFalse(input.fullscreen_passthrough)
+
+    def test_normal_page_click_only_requests_observation_without_android_actions(self):
+        playback=Mock();chrome=Mock()
+        chrome.take_fullscreen.return_value=False;chrome.take_wheel.return_value=None
+        chrome.take_page_change.return_value=True
+        self.assertEqual(WindowInput(playback,chrome).dispatch(),{'ok':True,'method':'page_refresh'})
+        playback.bridge.click.assert_not_called();playback.bridge.wheel.assert_not_called()
+        playback.request_landscape.assert_not_called();playback.tick.assert_not_called()
+
+    def overlap_nodes(self):
+        return [{'path':'0','bounds':[0,0,800,1200]},
+                {'path':'0/1','bounds':[300,700,500,750],'clickable':True,'enabled':True},
+                {'path':'0/1/0','bounds':[340,710,480,740],'text':'全屏观看','enabled':True},
+                {'path':'0/2','bounds':[280,735,620,780],'clickable':True,'enabled':True},
+                {'path':'0/2/0','bounds':[400,740,600,770],'text':'共34万人在追','enabled':True}]
+
+    def test_feed_overlap_leaves_gap_and_does_not_cover_or_capture_series_tag(self):
+        nodes=self.overlap_nodes();chrome=Mock()
+        input=WindowInput(Mock(screen=Screen('feed','剧名',3,nodes)),chrome)
+        rect=input.refresh_targets()
+        shown=input.fullscreen_presentation
+        self.assertEqual(shown['button_bounds'],[300,685,500,727])
+        self.assertEqual(shown['original_bounds'],[300,700,500,750])
+        self.assertEqual(shown['tag_bounds'],[280,735,620,780])
+        self.assertGreaterEqual(shown['tag_bounds'][1]-shown['button_bounds'][3],8)
+        self.assertLess(rect[3],round(735*65535/1200))
+        mask=chrome.set_fullscreen_presentation.call_args.args[0]
+        self.assertEqual(mask[3],round(735*65535/1200))
+
+    def test_nonoverlapping_tag_player_and_disabled_tag_keep_original_fullscreen(self):
+        for kind,tag_y,enabled in [('feed',780,True),('player',735,True),('feed',735,False)]:
+            with self.subTest(kind=kind,tag_y=tag_y,enabled=enabled):
+                nodes=self.overlap_nodes()
+                nodes[3]=dict(nodes[3],bounds=[280,tag_y,620,tag_y+45],enabled=enabled)
+                input=WindowInput(Mock(screen=Screen(kind,'剧名',3,nodes)),Mock())
+                rect=input.refresh_targets()
+                self.assertIsNone(input.fullscreen_presentation)
+                self.assertEqual(rect[1],round(700*65535/1200))
+                input.chrome.set_fullscreen_presentation.assert_called_once_with(None)
+
+    def test_relocated_feed_button_is_removed_during_navigation_or_preparation(self):
+        playback=Mock(screen=Screen('feed','剧名',3,self.overlap_nodes()))
+        input=WindowInput(playback,Mock());input.refresh_targets()
+        self.assertIsNotNone(input.fullscreen_presentation)
+        playback.stage='landscape_prepare'
+        self.assertIsNone(input.refresh_targets())
+        self.assertIsNone(input.fullscreen_presentation)
+        self.assertEqual(input.chrome.set_fullscreen_presentation.call_args.args,(None,))
+
     def test_every_page_receives_wheel_without_waiting_for_presentation_or_polling(self):
         for kind,landscape,playing in [('feed',False,True),('player',False,False),
                                       ('player',True,True),('player',False,True),

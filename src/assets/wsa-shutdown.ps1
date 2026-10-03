@@ -7,8 +7,13 @@ $settingsWindow = $null
 for ($attempt = 0; $attempt -lt 40; $attempt++) {
     $settingsProcess = Get-Process -Name WsaSettings -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($settingsProcess) {
-        $processCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ProcessIdProperty, [int]$settingsProcess.Id)
-        $settingsWindow = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst($scope, $processCondition)
+        # Searching every descendant of the desktop can block on another
+        # application's accessibility tree. WSA exposes its own native HWND.
+        $settingsProcess.Refresh()
+        $settingsHandle = $settingsProcess.MainWindowHandle
+        if ($settingsHandle -ne [IntPtr]::Zero) {
+            $settingsWindow = [System.Windows.Automation.AutomationElement]::FromHandle($settingsHandle)
+        }
         if ($settingsWindow) { break }
     }
     Start-Sleep -Milliseconds 200

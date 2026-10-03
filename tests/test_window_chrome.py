@@ -12,6 +12,30 @@ from desktop_manager.window_chrome import WindowChrome
 
 
 class WindowChromeTests(unittest.TestCase):
+    def test_page_change_hint_requires_a_fresh_native_reply_and_does_not_click(self):
+        chrome=self.chrome();chrome.grip=Mock(return_value=99)
+        def message(handle,message,wp,lp,flags,timeout,result):
+            result._obj.value=1
+            return 1
+        chrome.window.user.SendMessageTimeoutW.side_effect=message
+        self.assertTrue(chrome.take_page_change())
+        self.assertEqual(chrome.window.user.SendMessageTimeoutW.call_args.args[:4],(99,0x801f,0,0))
+        chrome.window.user.SendMessageTimeoutW.side_effect=None
+        chrome.window.user.SendMessageTimeoutW.return_value=0
+        self.assertFalse(chrome.take_page_change())
+        chrome.window.user.PostMessageW.assert_not_called()
+    def test_feed_presentation_only_sends_bounded_mask_and_clears_it(self):
+        chrome=self.chrome();chrome.grip=Mock(return_value=99)
+        self.assertTrue(chrome.set_fullscreen_presentation((1200,33000,4000,37000)))
+        self.assertEqual(chrome.window.user.SendMessageTimeoutW.call_args.args[:4],
+                         (99,0x801d,1200|(33000<<16),4000|(37000<<16)))
+        chrome.set_fullscreen_presentation((1200,33000,4000,37000))
+        self.assertEqual(chrome.window.user.SendMessageTimeoutW.call_count,1)
+        self.assertTrue(chrome.set_fullscreen_presentation(None))
+        self.assertEqual(chrome.window.user.SendMessageTimeoutW.call_args.args[:4],(99,0x801d,0,0))
+        for rect in ((0,0,65536,10),(0,20,10,10),(0.,0,10,10)):
+            with self.assertRaises(ValueError):chrome.set_fullscreen_presentation(rect)
+
     def chrome(self):
         chrome = object.__new__(WindowChrome)
         chrome.process = Mock(pid=51)
@@ -127,6 +151,20 @@ class WindowChromeTests(unittest.TestCase):
         chrome.window.user.SendMessageTimeoutW.side_effect = None
         chrome.window.user.SendMessageTimeoutW.return_value = 0
         self.assertFalse(chrome.take_fullscreen())
+
+    def test_original_click_has_distinct_packet_and_switching_mode_refreshes_target(self):
+        chrome=self.chrome();chrome.grip=Mock(return_value=99)
+        rect=(1200,33000,4000,37000)
+        chrome.set_fullscreen_target(rect)
+        chrome.set_fullscreen_target(rect,passthrough=True)
+        self.assertEqual(chrome.window.user.SendMessageTimeoutW.call_count,2)
+        self.assertEqual(chrome.window.user.SendMessageTimeoutW.call_args.args[2],
+                         1200|(33000<<16)|(1<<32))
+        def reply(*args):
+            args[-1]._obj.value=2
+            return 1
+        chrome.window.user.SendMessageTimeoutW.side_effect=reply
+        self.assertEqual(chrome.take_fullscreen(),'observed')
 
     def test_geometry_hold_keeps_title_visible_while_user_preference_still_hides_it(self):
         chrome = self.chrome()

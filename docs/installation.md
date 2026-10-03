@@ -22,7 +22,7 @@ WSA 官方商店渠道已下架。本项目固定使用 `manifests/dependencies.
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Launch
 ```
 
-脚本创建独立 `.venv`、安装固定 Python 依赖、下载并校验 Android Platform Tools，创建桌面和开始菜单快捷方式。保留仓库目录，源码快捷方式依赖该目录。
+脚本默认安装经过 SHA-256 校验的 Windows 成品，并创建通过守护程序启动的桌面和开始菜单快捷方式。日常使用无需另装 Python。开发调试可显式选择 `-Mode Source`，该模式创建独立 `.venv` 并依赖源码目录。
 
 在 WSA 设置中开启开发人员模式，唤醒安卓，首次连接时允许 ADB 授权。默认地址 `127.0.0.1:58526`，工具使用独立 ADB 服务端口 `5038`。
 
@@ -65,10 +65,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -ApkPa
 这是 Agent 默认选择的安装方式，无需安装 Python。使用带有匹配清单的仓库版本及 `manifests/release.json`：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.2 -Launch
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Mode Release -Version v0.1.8 -Launch
 ```
 
-从默认仓库下载对应成品并校验；可用 `-Repository 'owner/repo'` 指定镜像仓库。预先下载的成品可传 `-BundlePath 'C:\Downloads\hongguo-desktop-v0.1.2-windows-x64.zip'`。
+从默认仓库下载对应成品并校验；可用 `-Repository 'owner/repo'` 指定镜像仓库。预先下载的成品可传 `-BundlePath 'C:\Downloads\hongguo-desktop-v0.1.8-windows-x64.zip'`。
 
 成品按版本放入 `%LOCALAPPDATA%\HongguoDesktopHelper\program`，不覆盖观看记录。已有进程应先从助手的“退出工具”关闭，再启动新版本。
 

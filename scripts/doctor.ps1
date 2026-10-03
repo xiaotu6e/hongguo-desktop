@@ -7,6 +7,11 @@ function Add-Check { param($Name,$Status,$Detail); $checks.Add([pscustomobject]@
 $record = Get-InstallRecord
 if ($record -and (Test-Path -LiteralPath $record.executable)) { Add-Check 'helper' 'ok' $record.mode }
 else { Add-Check 'helper' 'missing' 'Run scripts/install.ps1.' }
+if ($record -and $record.mode -eq 'Release' -and [Version]$record.version.TrimStart('v') -ge [Version]'0.1.8') {
+    $guardian = Join-Path $record.working_directory 'helper-guardian.exe'
+    if (Test-Path -LiteralPath $guardian) { Add-Check 'guardian' 'ok' 'Background guardian is present.' }
+    else { Add-Check 'guardian' 'missing' 'Install the complete helper bundle.' }
+}
 $wsa = Get-WsaInstallation
 if ($wsa) { Add-Check 'wsa' 'ok' ([string]$wsa.Version) }
 else { Add-Check 'wsa' 'missing' 'Install the documented WSA build.' }

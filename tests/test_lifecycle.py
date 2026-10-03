@@ -22,12 +22,42 @@ class LifecycleTests(IsolatedAsyncioTestCase):
         app.page = SimpleNamespace(window=SimpleNamespace(
             minimized=False, visible=False, destroy=AsyncMock()), update=Mock())
         app.runtime = Mock()
+        app.guardian = Mock()
         app.events = Mock()
         app.stopping = False
         app.lock = asyncio.Lock()
         app.window_chrome = Mock()
+        app.player_window = Mock()
         app.playback = Mock()
+        app.playback.fast_until = 0.0
         return app
+
+    async def test_observer_is_woken_by_input_during_idle_wait(self):
+        app=self.app();app.player_observe_event=asyncio.Event()
+        waiting=asyncio.create_task(app.wait_player_observer(10))
+        await asyncio.sleep(0)
+        app.notify_player_change()
+        await asyncio.wait_for(waiting,.2)
+        self.assertFalse(app.player_observe_event.is_set())
+        self.assertGreater(app.playback.fast_until,0)
+
+    async def test_recovery_reuses_geometry_only_for_the_same_live_player_window(self):
+        app = self.app()
+        app.guardian.recovery = True
+        app.settings = SimpleNamespace(window_mode="auto")
+        app.landscape_initialized = app.last_window_layout = None
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "last-unexpected-exit.json").write_text(json.dumps({
+                "landscape_cache": [100, "9496"], "screen": {"landscape": True}}), encoding="utf-8")
+            app.player_window.find.return_value = 200
+            with patch("main.data_directory", return_value=Path(directory)):
+                app.restore_recovery_layout()
+                self.assertIsNone(app.landscape_initialized)
+                app.player_window.find.return_value = 100
+                app.restore_recovery_layout()
+            self.assertEqual(app.landscape_initialized, (100, "9496"))
+            self.assertEqual(app.landscape_checked_at, 0)
+            self.assertEqual(app.last_window_layout, (100, "auto", True))
 
     async def test_close_button_keeps_input_running_and_taskbar_window_recoverable(self):
         app = self.app()
@@ -39,16 +69,35 @@ class LifecycleTests(IsolatedAsyncioTestCase):
         app.playback.close.assert_not_called()
         app.runtime.lifecycle.assert_called_once_with("minimized")
 
-    async def test_explicit_exit_restores_player_before_destroying_helper(self):
+    async def test_explicit_exit_stops_guardian_and_player_before_destroying_helper(self):
         app = self.app()
         order = []
+        app.player_window.finish_tap_control.side_effect = lambda: order.append("pointer")
+        app.guardian.request_stop.side_effect = lambda: order.append("stop_guardian")
+        app.window_chrome.close_player.side_effect = lambda: order.append("player")
         app.window_chrome.close.side_effect = lambda: order.append("native")
         app.playback.close.side_effect = lambda: order.append("bridge")
         app.page.window.destroy.side_effect = lambda: order.append("window")
         await app.exit_tool()
-        self.assertEqual(order, ["native", "bridge", "window"])
+        self.assertEqual(order, ["stop_guardian", "pointer", "player", "native", "bridge", "window"])
         self.assertTrue(app.stopping)
         await app.exit_tool()
+        app.page.window.destroy.assert_awaited_once()
+
+    async def test_keyboard_exit_is_recorded_separately_from_button_exit(self):
+        app = self.app()
+        await app.on_keyboard_event(SimpleNamespace(ctrl=True, shift=True, key="Q"))
+        app.runtime.update.assert_any_call(exit_requested=True, exit_source="keyboard")
+        app.runtime.lifecycle.assert_called_once_with("exiting", "快捷键退出工具 (Ctrl+Shift+Q)")
+        app.guardian.request_stop.assert_called_once()
+        app.window_chrome.close_player.assert_called_once()
+
+    async def test_input_cleanup_failure_still_closes_player_and_signals_intentional_exit(self):
+        app = self.app()
+        app.clear_window_input_targets = Mock(side_effect=OSError("input disconnected"))
+        await app.exit_tool()
+        app.guardian.request_stop.assert_called_once()
+        app.window_chrome.close_player.assert_called_once()
         app.page.window.destroy.assert_awaited_once()
 
     async def test_restore_resets_minimized_property_so_a_second_close_can_minimize_again(self):
@@ -87,7 +136,9 @@ class LifecycleTests(IsolatedAsyncioTestCase):
             async def verify_durable_shutdown():
                 state = json.loads(app.runtime.path.read_text(encoding="utf-8"))
                 self.assertEqual(state["lifecycle"], "stopped")
-                self.assertEqual(state["exit_reason"], "用户选择退出工具")
+                self.assertEqual(state["exit_reason"], "点击退出工具")
+                self.assertTrue(state["exit_requested"])
+                self.assertEqual(state["exit_source"], "button")
                 self.assertFalse(state["bridge"]["alive"])
                 self.assertFalse(state["native"]["alive"])
                 self.assertFalse(state["tasks"]["watch_window_input"]["alive"])
@@ -168,7 +219,7 @@ class SingleLaunchTests(TestCase):
             ctypes.cast(pointer, ctypes.POINTER(wt.DWORD)).contents.value = windows[hwnd]["pid"]
 
         def process_path(process, _, buffer, _size):
-            buffer.value = r"C:\test-app\hongguo_desktop.exe"
+            buffer.value = r"E:\tools\hongguo_desktop.exe"
             return True
 
         def restore(hwnd, _):

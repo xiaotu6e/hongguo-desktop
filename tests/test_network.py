@@ -69,7 +69,7 @@ class NetworkTests(unittest.TestCase):
                 patch.object(manager, "configure_direct_network", side_effect=OperationError("测试权限失败")) as apply, \
                 patch("desktop_manager.android.os.startfile") as activate:
             self.assertFalse(manager.ensure_ready())
-        apply.assert_called_once_with()
+        apply.assert_called_once_with(timeout=2)
         activate.assert_not_called()
         self.assertTrue(any("未完成" in message for message in messages))
 

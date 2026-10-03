@@ -9,7 +9,7 @@
 
 // WSA's own F11 mode hides its composition-based title bar. We keep the
 // resulting borderless window at its content size, without copying video.
-static HWND target = nullptr, grip = nullptr;
+static HWND target = nullptr, grip = nullptr, feedButton = nullptr;
 static DWORD targetPid = 0;
 static HANDLE parentProcess = nullptr, stopEvent = nullptr, inputEvent = nullptr;
 static bool ownsFullscreen = false, entering = false, syncing = false;
@@ -38,14 +38,26 @@ static const UINT INPUT_STATUS = WM_APP + 25;
 static const UINT SET_FULLSCREEN_TARGET = WM_APP + 26;
 static const UINT TAKE_FULLSCREEN = WM_APP + 27;
 static const UINT QUEUE_FULLSCREEN = WM_APP + 28;
+static const UINT SET_FULLSCREEN_PRESENTATION = WM_APP + 29;
+static const UINT QUEUE_PAGE_CHANGE = WM_APP + 30;
+static const UINT TAKE_PAGE_CHANGE = WM_APP + 31;
+static const UINT FOCUS_FULLSCREEN_CLICK = WM_APP + 32;
+static DWORD pendingPageChangeAt = 0;
 static const ULONGLONG INPUT_LEASE_MS = 3000;
 static const ULONGLONG FULLSCREEN_TARGET_MS = 3000;
 static RECT fullscreenNormalized{};
+static RECT fullscreenMaskNormalized{}, feedButtonLocal{}, feedMaskLocal{}, lastFeedWidget{};
+static COLORREF feedBackground = RGB(0, 0, 0);
+static const wchar_t* FEED_BUTTON_CLASS = L"HongguoFeedFullscreen";
 static std::atomic<ULONGLONG> fullscreenTargetAt{0};
 static std::atomic<UINT_PTR> fullscreenHitVersion{0};
 static std::atomic<ULONGLONG> fullscreenTopLeft{0}, fullscreenBottomRight{0};
 static DWORD pendingFullscreenAt = 0;
+static int pendingFullscreenKind = 1;
+static std::atomic<bool> fullscreenPassthrough{false};
 static bool fullscreenPressed = false;
+static bool fullscreenPressPassthrough = false;
+static std::atomic<UINT_PTR> fullscreenPresses{0}, fullscreenQueued{0}, fullscreenFocusOk{0};
 static POINT fullscreenPressPoint{};
 static DWORD fullscreenPressAt = 0;
 static bool SameTarget();
@@ -87,6 +99,88 @@ static bool ContentRect(RECT& area) {
                 origin.x + client.right, origin.y + client.bottom};
     }
     return area.right > area.left && area.bottom > area.top;
+}
+static void SyncFeedButton() {
+    RECT area{};
+    ULONGLONG now = GetTickCount64(), observed = fullscreenTargetAt.load(), heartbeat = inputHeartbeat.load();
+    if (!feedButton) return;
+    if (!observed || now-observed > FULLSCREEN_TARGET_MS || !heartbeat || now-heartbeat > INPUT_LEASE_MS ||
+        fullscreenMaskNormalized.right <= fullscreenMaskNormalized.left ||
+        fullscreenMaskNormalized.bottom <= fullscreenMaskNormalized.top ||
+        entering || !SameTarget() || IsIconic(target) || !IsWindowVisible(target) || !ContentRect(area)) {
+        ShowWindow(feedButton, SW_HIDE); lastFeedWidget = {}; return;
+    }
+    const int width = area.right-area.left, height = area.bottom-area.top;
+    auto mapped = [&](RECT rect) { return RECT{
+        area.left+MulDiv(rect.left,width,65535), area.top+MulDiv(rect.top,height,65535),
+        area.left+MulDiv(rect.right,width,65535), area.top+MulDiv(rect.bottom,height,65535)}; };
+    RECT button = mapped(fullscreenNormalized), mask = mapped(fullscreenMaskNormalized);
+    RECT widget{std::min(button.left,mask.left),std::min(button.top,mask.top),
+                std::max(button.right,mask.right),std::max(button.bottom,mask.bottom)};
+    RECT localButton{button.left-widget.left,button.top-widget.top,button.right-widget.left,button.bottom-widget.top};
+    RECT localMask{mask.left-widget.left,mask.top-widget.top,mask.right-widget.left,mask.bottom-widget.top};
+    bool changed = !EqualRect(&widget,&lastFeedWidget) || !EqualRect(&localButton,&feedButtonLocal) ||
+                   !EqualRect(&localMask,&feedMaskLocal) || !IsWindowVisible(feedButton);
+    if (changed) {
+        POINT sample{mask.left-5,mask.top-5};
+        HWND under = WindowFromPoint(sample);
+        if (under == target || under == grip || IsChild(target,under)) {
+            HDC screen = GetDC(nullptr);
+            COLORREF color = GetPixel(screen,sample.x,sample.y);
+            ReleaseDC(nullptr,screen);
+            if (color != CLR_INVALID) feedBackground = color;
+        }
+        feedButtonLocal = localButton; feedMaskLocal = localMask;
+        HRGN region = CreateRectRgn(localButton.left,localButton.top,localButton.right,localButton.bottom);
+        HRGN old = CreateRectRgn(localMask.left,localMask.top,localMask.right,localMask.bottom);
+        CombineRgn(region,region,old,RGN_OR); DeleteObject(old);
+        if (!SetWindowRgn(feedButton,region,FALSE)) DeleteObject(region);
+        lastFeedWidget = widget;
+    }
+    // Above the input grip (or WSA with a visible title), never globally topmost.
+    HWND anchor = IsWindowVisible(grip) ? grip : target;
+    if (changed || GetWindow(anchor,GW_HWNDPREV) != feedButton) {
+        HWND above = GetWindow(anchor,GW_HWNDPREV);
+        SetWindowPos(feedButton,above == feedButton ? nullptr : above,widget.left,widget.top,
+                     widget.right-widget.left,widget.bottom-widget.top,
+                     (above == feedButton ? SWP_NOZORDER : 0) | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_SHOWWINDOW);
+    }
+    if (changed) InvalidateRect(feedButton,nullptr,FALSE);
+}
+static LRESULT CALLBACK FeedButtonProc(HWND window,UINT message,WPARAM wParam,LPARAM lParam) {
+    if (message == WM_MOUSEACTIVATE) return MA_NOACTIVATE;
+    if (message == WM_ERASEBKGND) return 1;
+    if (message == WM_PAINT) {
+        PAINTSTRUCT paint{}; HDC dc = BeginPaint(window,&paint);
+        RECT all{}; GetClientRect(window,&all);
+        HBRUSH background = CreateSolidBrush(feedBackground); FillRect(dc,&all,background); DeleteObject(background);
+        const int height = feedButtonLocal.bottom-feedButtonLocal.top;
+        HBRUSH button = CreateSolidBrush(RGB(36,36,36));
+        HGDIOBJ oldBrush = SelectObject(dc,button), oldPen = SelectObject(dc,GetStockObject(NULL_PEN));
+        RoundRect(dc,feedButtonLocal.left,feedButtonLocal.top,feedButtonLocal.right,feedButtonLocal.bottom,
+                  std::max(6,height/2),std::max(6,height/2));
+        SelectObject(dc,oldBrush); SelectObject(dc,oldPen); DeleteObject(button);
+        int fontHeight = std::max(6,MulDiv(height,18,38));
+        HFONT font = CreateFontW(-fontHeight,0,0,0,FW_SEMIBOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+                                 OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");
+        HGDIOBJ oldFont = SelectObject(dc,font);
+        SetBkMode(dc,TRANSPARENT); SetTextColor(dc,RGB(255,255,255));
+        int iconWidth = MulDiv(height,16,38), gap = MulDiv(height,7,38);
+        RECT text{}; DrawTextW(dc,L"\u5168\u5c4f\u89c2\u770b",4,&text,DT_CALCRECT|DT_SINGLELINE);
+        int x = feedButtonLocal.left + (feedButtonLocal.right-feedButtonLocal.left-iconWidth-gap-text.right)/2;
+        int y = feedButtonLocal.top+(height-MulDiv(height,17,38))/2;
+        HPEN iconPen = CreatePen(PS_SOLID,std::max(1,height/25),RGB(255,255,255));
+        oldPen = SelectObject(dc,iconPen); oldBrush = SelectObject(dc,GetStockObject(NULL_BRUSH));
+        RoundRect(dc,x,y,x+MulDiv(height,9,38),y+MulDiv(height,17,38),3,3);
+        MoveToEx(dc,x+MulDiv(height,12,38),y+MulDiv(height,5,38),nullptr);
+        LineTo(dc,x+iconWidth,y+MulDiv(height,5,38)); LineTo(dc,x+iconWidth,y+MulDiv(height,14,38));
+        LineTo(dc,x+MulDiv(height,12,38),y+MulDiv(height,14,38));
+        SelectObject(dc,oldPen); SelectObject(dc,oldBrush); DeleteObject(iconPen);
+        text = {x+iconWidth+gap,feedButtonLocal.top,feedButtonLocal.right,feedButtonLocal.bottom};
+        DrawTextW(dc,L"\u5168\u5c4f\u89c2\u770b",4,&text,DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+        SelectObject(dc,oldFont); DeleteObject(font); EndPaint(window,&paint); return 0;
+    }
+    return DefWindowProcW(window,message,wParam,lParam);
 }
 static ULONGLONG PackPoint(LONG x, LONG y) {
     return (static_cast<ULONGLONG>(static_cast<DWORD>(x)) << 32) | static_cast<DWORD>(y);
@@ -193,7 +287,7 @@ static void Sync() {
     if (IsIconic(target) || !IsWindowVisible(target)) {
         CancelDrag();
         UpdateFullscreenHitRect();
-        ShowWindow(grip, SW_HIDE); syncing = false; return;
+        ShowWindow(grip, SW_HIDE); SyncFeedButton(); syncing = false; return;
     }
     if (!hideTitlebar) {
         CancelDrag();
@@ -201,6 +295,7 @@ static void Sync() {
         ShowWindow(grip, SW_HIDE);
         lastGrip = {};
         UpdateFullscreenHitRect();
+        SyncFeedButton();
         syncing = false; return;
     }
     if (entering) {
@@ -245,6 +340,7 @@ static void Sync() {
         lastGrip = area;
     }
     UpdateFullscreenHitRect();
+    SyncFeedButton();
     syncing = false;
 }
 static void CALLBACK LocationChanged(HWINEVENTHOOK, DWORD, HWND window, LONG object, LONG, DWORD, DWORD) {
@@ -281,27 +377,51 @@ static LRESULT CALLBACK MouseInput(int code, WPARAM message, LPARAM data) {
         const auto* mouse = reinterpret_cast<const MSLLHOOKSTRUCT*>(data);
         if (message == WM_LBUTTONUP && fullscreenPressed) {
             fullscreenPressed = false;
+            bool passed = fullscreenPressPassthrough;
             ULONGLONG heartbeat = inputHeartbeat.load();
             HWND under = WindowFromPoint(mouse->pt);
             if (heartbeat && GetTickCount64()-heartbeat < INPUT_LEASE_MS && !ClickModifiers() &&
                 mouse->time-fullscreenPressAt < 800 &&
                 abs(mouse->pt.x-fullscreenPressPoint.x) <= 8 && abs(mouse->pt.y-fullscreenPressPoint.y) <= 8 &&
-                (under == grip || under == target || IsChild(target, under)) && FullscreenHit(mouse->pt))
-                PostMessageW(grip, QUEUE_FULLSCREEN, mouse->time, 0);
+                ((under == grip || under == target || IsChild(target, under)) && FullscreenHit(mouse->pt) ||
+                 !passed && SameTarget() && GetAncestor(GetForegroundWindow(),GA_ROOT) == target))
+                PostMessageW(grip, QUEUE_FULLSCREEN, mouse->time, passed ? 2 : 1);
             // Only this pair was intercepted. A canceled button click must not
             // inject a lone release or replay input onto a different page.
-            return 1;
+            if (!passed) return 1;
         }
         ULONGLONG heartbeat = inputHeartbeat.load();
         if (message == WM_LBUTTONDOWN && heartbeat && GetTickCount64()-heartbeat < INPUT_LEASE_MS &&
             !ClickModifiers() && FullscreenHit(mouse->pt)) {
             HWND under = WindowFromPoint(mouse->pt);
-            if (under == target || IsChild(target, under)) {
+            if (under == target || under == feedButton || IsChild(target, under)) {
                 fullscreenPressed = true;
+                ++fullscreenPresses;
+                fullscreenPressPassthrough = fullscreenPassthrough.load();
                 fullscreenPressPoint = mouse->pt;
                 fullscreenPressAt = mouse->time;
-                return 1;
+                // Initialized players handle their real click immediately.
+                // Python only observes; it cannot reject or replay this pair.
+                if (!fullscreenPressPassthrough) {
+                    // Swallowing a cold click also suppresses Windows' normal
+                    // activation. Do that small UI operation on the window
+                    // thread, with the fresh physical gesture still checked.
+                    PostMessageW(grip, FOCUS_FULLSCREEN_CLICK, mouse->time,
+                                 MAKELPARAM(mouse->pt.x, mouse->pt.y));
+                    return 1;
+                }
             }
+        }
+    }
+    if (code == HC_ACTION && message == WM_LBUTTONUP) {
+        const auto* mouse = reinterpret_cast<const MSLLHOOKSTRUCT*>(data);
+        ULONGLONG heartbeat = inputHeartbeat.load();
+        if (heartbeat && GetTickCount64()-heartbeat < INPUT_LEASE_MS) {
+            HWND under = WindowFromPoint(mouse->pt);
+            if (under == target || IsChild(target,under))
+                // Read-only notification: the original click passes to WSA.
+                // The hook never waits for Python, Android, or a UI snapshot.
+                PostMessageW(grip,QUEUE_PAGE_CHANGE,mouse->time,0);
         }
     }
     if (code == HC_ACTION && message == WM_MOUSEWHEEL) {
@@ -349,6 +469,22 @@ static DWORD WINAPI InputThread(void* readyEvent) {
 }
 static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
+    case FOCUS_FULLSCREEN_CLICK: {
+        POINT point{static_cast<short>(LOWORD(lParam)),static_cast<short>(HIWORD(lParam))}, cursor{};
+        HWND under = WindowFromPoint(point);
+        if (GetTickCount()-static_cast<DWORD>(wParam) < 200 && SameTarget() && !IsIconic(target) &&
+            !ClickModifiers() && FullscreenHit(point) && GetCursorPos(&cursor) &&
+            abs(cursor.x-point.x) <= 8 && abs(cursor.y-point.y) <= 8 &&
+            (under == target || under == feedButton || IsChild(target,under))) {
+            DWORD currentThread = GetCurrentThreadId();
+            DWORD foregroundThread = GetWindowThreadProcessId(GetForegroundWindow(),nullptr);
+            bool attached = foregroundThread && foregroundThread != currentThread &&
+                            AttachThreadInput(currentThread,foregroundThread,TRUE);
+            if (SetForegroundWindow(target)) ++fullscreenFocusOk;
+            if (attached) AttachThreadInput(currentThread,foregroundThread,FALSE);
+        }
+        return 0;
+    }
     case QUEUE_WHEEL: {
         if (GetTickCount()-static_cast<DWORD>(wParam >> 16) > 600) return 0;
         POINT point{static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam))};
@@ -361,33 +497,54 @@ static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPA
     case TAKE_WHEEL: {
         UINT_PTR packet = GetTickCount64()-lastWheelForward < 600 ? pendingWheel : 0;
         pendingWheel = 0;
-        if (packet && pendingFullscreenAt && GetTickCount()-pendingFullscreenAt < 600) SetEvent(inputEvent);
+        if (packet && ((pendingFullscreenAt && GetTickCount()-pendingFullscreenAt < 600) ||
+                       (pendingPageChangeAt && GetTickCount()-pendingPageChangeAt < 1000))) SetEvent(inputEvent);
         return static_cast<LRESULT>(packet);
     }
     case INPUT_READY:
         inputHeartbeat = wParam ? GetTickCount64() : 0;
-        if (!wParam) { pendingWheel = wheelRemainder = 0; pendingFullscreenAt = 0; }
+        if (!wParam) { pendingWheel = wheelRemainder = 0; pendingFullscreenAt = pendingPageChangeAt = 0; }
         return 1;
     case SET_FULLSCREEN_TARGET:
+        fullscreenPassthrough = (static_cast<UINT_PTR>(wParam) & (UINT_PTR{1} << 32)) != 0;
         fullscreenNormalized = {static_cast<LONG>(LOWORD(wParam)), static_cast<LONG>(HIWORD(wParam)),
                                 static_cast<LONG>(LOWORD(lParam)), static_cast<LONG>(HIWORD(lParam))};
         fullscreenTargetAt = fullscreenNormalized.right > fullscreenNormalized.left &&
                              fullscreenNormalized.bottom > fullscreenNormalized.top ? GetTickCount64() : 0;
         if (!fullscreenTargetAt.load()) pendingFullscreenAt = 0;
         UpdateFullscreenHitRect();
+        SyncFeedButton();
         return 1;
+    case SET_FULLSCREEN_PRESENTATION:
+        fullscreenMaskNormalized = {static_cast<LONG>(LOWORD(wParam)),static_cast<LONG>(HIWORD(wParam)),
+                                    static_cast<LONG>(LOWORD(lParam)),static_cast<LONG>(HIWORD(lParam))};
+        SyncFeedButton(); return 1;
     case QUEUE_FULLSCREEN:
         if (GetTickCount()-static_cast<DWORD>(wParam) > 600 || !SameTarget()) return 0;
         pendingFullscreenAt = static_cast<DWORD>(wParam);
+        ++fullscreenQueued;
+        pendingFullscreenKind = lParam == 2 ? 2 : 1;
         SetEvent(inputEvent);
         return 0;
+    case QUEUE_PAGE_CHANGE:
+        if (GetTickCount()-static_cast<DWORD>(wParam)>1000 || !SameTarget()) return 0;
+        pendingPageChangeAt = static_cast<DWORD>(wParam);
+        SetEvent(inputEvent); return 0;
+    case TAKE_PAGE_CHANGE: {
+        bool ready = pendingPageChangeAt && GetTickCount()-pendingPageChangeAt < 1000;
+        pendingPageChangeAt = 0;
+        if (ready && ((pendingFullscreenAt && GetTickCount()-pendingFullscreenAt < 600) ||
+                      (pendingWheel && GetTickCount64()-lastWheelForward < 600))) SetEvent(inputEvent);
+        return ready ? 1 : 0;
+    }
     case TAKE_FULLSCREEN: {
         bool ready = pendingFullscreenAt && GetTickCount()-pendingFullscreenAt < 600;
         pendingFullscreenAt = 0;
         // Auto-reset events coalesce signals. Preserve a second fresh input
         // kind when this read consumed the shared wake-up notification.
-        if (ready && pendingWheel && GetTickCount64()-lastWheelForward < 600) SetEvent(inputEvent);
-        return ready ? 1 : 0;
+        if (ready && ((pendingWheel && GetTickCount64()-lastWheelForward < 600) ||
+                      (pendingPageChangeAt && GetTickCount()-pendingPageChangeAt < 1000))) SetEvent(inputEvent);
+        return ready ? pendingFullscreenKind : 0;
     }
     case SET_TITLEBAR:
         hideTitlebar = wParam != 0;
@@ -402,6 +559,9 @@ static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPA
         case 3: return hookWheelCalls.load();
         case 4: return wheelSequence;
         case 5: return hookError.load();
+        case 6: return fullscreenPresses.load();
+        case 7: return fullscreenQueued.load();
+        case 8: return fullscreenFocusOk.load();
         }
         return 0;
     case WM_LBUTTONDOWN: {
@@ -504,6 +664,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int) {
                           CLASS_NAME, L"", WS_POPUP, 0, 0, 1, 1, target, nullptr, instance, nullptr);
     if (!grip) return 6;
     SetLayeredWindowAttributes(grip, 0, 1, LWA_ALPHA);
+    WNDCLASSW buttonClass{};
+    buttonClass.lpfnWndProc = FeedButtonProc; buttonClass.hInstance = instance;
+    buttonClass.hCursor = LoadCursorW(nullptr,IDC_HAND); buttonClass.lpszClassName = FEED_BUTTON_CLASS;
+    if (!RegisterClassW(&buttonClass)) return 6;
+    feedButton = CreateWindowExW(WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE,
+        FEED_BUTTON_CLASS,L"",WS_POPUP,0,0,1,1,target,nullptr,instance,nullptr);
+    if (!feedButton) return 6;
+    SetLayeredWindowAttributes(feedButton,0,255,LWA_ALPHA);
     HWINEVENTHOOK hook = SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE,
                                         nullptr, LocationChanged, targetPid, 0,
                                         WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
@@ -525,6 +693,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int) {
     WaitForSingleObject(inputThread, 2000); CloseHandle(inputThread);
     if (hook) UnhookWinEvent(hook);
     KillTimer(grip, 1); ShowWindow(grip, SW_HIDE);
+    ShowWindow(feedButton,SW_HIDE); DestroyWindow(feedButton);
     Restore(); DestroyWindow(grip);
     CloseHandle(stopEvent); CloseHandle(parentProcess); CloseHandle(inputEvent);
     ReleaseMutex(mutex); CloseHandle(mutex);

@@ -6,6 +6,7 @@ from ctypes import wintypes as wt
 from dataclasses import dataclass
 from pathlib import Path
 import re
+import time
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,7 @@ class WsaPlayerWindow:
         self.user.EnumWindows.argtypes = [self.callback_type, wt.LPARAM]
         self.user.GetWindowThreadProcessId.argtypes = [wt.HWND, ctypes.POINTER(wt.DWORD)]
         self.user.GetWindowTextW.argtypes = [wt.HWND, wt.LPWSTR, ctypes.c_int]
+        self.user.GetClassNameW.argtypes = [wt.HWND, wt.LPWSTR, ctypes.c_int]
         self.user.IsWindowVisible.argtypes = [wt.HWND]
         self.user.IsIconic.argtypes = [wt.HWND]
         self.user.IsZoomed.argtypes = [wt.HWND]
@@ -79,6 +81,104 @@ class WsaPlayerWindow:
                                                           ctypes.POINTER(wt.DWORD)]
         self.kernel.CloseHandle.argtypes = [wt.HANDLE]
 
+    def finish_tap_control(self):
+        """Restore the pointer after the app acknowledged or canceled its click."""
+        pending = getattr(self, "_pending_tap_pointer", None)
+        self._pending_tap_pointer = None
+        if not pending:
+            return
+        hwnd, old_x, old_y, tap_x, tap_y = pending
+        u = self.user
+        previous = u.SetThreadDpiAwarenessContext(ctypes.c_void_p(-4))
+        try:
+            cursor = wt.POINT()
+            if (u.GetCursorPos(ctypes.byref(cursor)) and (cursor.x,cursor.y) == (tap_x,tap_y)
+                    and u.GetAncestor(u.GetForegroundWindow(),2) == hwnd):
+                u.SetCursorPos(old_x,old_y)
+        finally:
+            if previous:
+                u.SetThreadDpiAwarenessContext(previous)
+
+    def tap_control(self, hwnd, root, bounds, *, defer_restore=False):
+        """Activate one verified button through WSA's own mouse mapping."""
+        if not hwnd or len(root) != 4 or len(bounds) != 4:
+            return False
+        left, top, right, bottom = root
+        x1, y1, x2, y2 = bounds
+        x, y = (x1+x2)/2, (y1+y2)/2
+        if (right <= left or bottom <= top or x2 <= x1 or y2 <= y1
+                or not (left <= x < right and top <= y < bottom)
+                or (x2-x1)*(y2-y1) > (right-left)*(bottom-top)*.2):
+            return False
+        u = self.user
+        u.GetForegroundWindow.restype = wt.HWND
+        u.GetAncestor.argtypes = [wt.HWND, wt.UINT]
+        u.GetAncestor.restype = wt.HWND
+        u.GetClientRect.argtypes = [wt.HWND, ctypes.POINTER(wt.RECT)]
+        u.ClientToScreen.argtypes = [wt.HWND, ctypes.POINTER(wt.POINT)]
+        u.WindowFromPoint.argtypes = [wt.POINT]
+        u.WindowFromPoint.restype = wt.HWND
+        u.GetCursorPos.argtypes = [ctypes.POINTER(wt.POINT)]
+        u.SetCursorPos.argtypes = [ctypes.c_int, ctypes.c_int]
+        u.mouse_event.argtypes = [wt.DWORD, wt.DWORD, wt.DWORD, wt.DWORD, ctypes.c_size_t]
+        if (u.GetAncestor(u.GetForegroundWindow(), 2) != hwnd or u.IsIconic(hwnd)
+                or any(u.GetAsyncKeyState(key)&0x8000 for key in (0x10, 0x11, 0x12))):
+            return False
+        previous_dpi = u.SetThreadDpiAwarenessContext(ctypes.c_void_p(-4))
+        original = wt.POINT()
+        point = wt.POINT()
+        moved = False
+        try:
+            rect = wt.RECT()
+            if not u.GetClientRect(hwnd, ctypes.byref(rect)) or rect.right <= 0 or rect.bottom <= 0:
+                return False
+            point.x, point.y = round((x-left)/(right-left)*rect.right), round((y-top)/(bottom-top)*rect.bottom)
+            if not u.ClientToScreen(hwnd, ctypes.byref(point)) or not u.GetCursorPos(ctypes.byref(original)):
+                return False
+            # Never activate another app, an occluding window, or a stale
+            # fullscreen gesture after the user has changed focus.
+            if (u.GetAncestor(u.WindowFromPoint(point), 2) != hwnd
+                    or u.GetAncestor(u.GetForegroundWindow(), 2) != hwnd):
+                return False
+            if not u.SetCursorPos(point.x, point.y):
+                return False
+            moved = True
+            # WSA needs a real move packet before the button packet. Restoring
+            # the pointer before its queued release is handled cancels clicks.
+            vx, vy = u.GetSystemMetrics(76), u.GetSystemMetrics(77)
+            vw, vh = u.GetSystemMetrics(78), u.GetSystemMetrics(79)
+            if vw <= 1 or vh <= 1:
+                return False
+            nx, ny = round((point.x-vx)*65535/(vw-1)), round((point.y-vy)*65535/(vh-1))
+            flags = 0x8000 | 0x4000
+            u.mouse_event(1 | flags, nx, ny, 0, 0)
+            time.sleep(.05)
+            cursor = wt.POINT()
+            if (u.GetAncestor(u.GetForegroundWindow(), 2) != hwnd
+                    or not u.GetCursorPos(ctypes.byref(cursor))
+                    or (cursor.x, cursor.y) != (point.x, point.y)
+                    or u.GetAncestor(u.WindowFromPoint(cursor), 2) != hwnd):
+                return False
+            u.mouse_event(2 | flags, nx, ny, 0, 0)
+            try:
+                time.sleep(.04)
+            finally:
+                u.mouse_event(4 | flags, nx, ny, 0, 0)
+            time.sleep(.1)
+            if defer_restore:
+                # WSA processes input asynchronously. Moving away after a
+                # fixed delay can cancel a queued release on a busy frame.
+                # The app observer completes restoration after its outcome.
+                self._pending_tap_pointer = (hwnd,original.x,original.y,point.x,point.y)
+                moved = False
+            return True
+        finally:
+            cursor = wt.POINT()
+            if moved and u.GetCursorPos(ctypes.byref(cursor)) and (cursor.x, cursor.y) == (point.x, point.y):
+                u.SetCursorPos(original.x, original.y)
+            if previous_dpi:
+                u.SetThreadDpiAwarenessContext(previous_dpi)
+
     def find(self) -> int | None:
         found = []
 
@@ -89,6 +189,12 @@ class WsaPlayerWindow:
             title = ctypes.create_unicode_buffer(512)
             self.user.GetWindowTextW(hwnd, title, len(title))
             if title.value not in {"红果免费短剧", "红果短剧"}:
+                return True
+            window_class = ctypes.create_unicode_buffer(256)
+            self.user.GetClassNameW(hwnd, window_class, len(window_class))
+            if window_class.value != "com.phoenix.read":
+                # WSA can keep a same-title '(splash)' window after the app has
+                # drawn. Never select that loading window as the player.
                 return True
             pid = wt.DWORD()
             self.user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
@@ -106,6 +212,31 @@ class WsaPlayerWindow:
 
         self.user.EnumWindows(visit, 0)
         return found[0] if found else None
+
+    def hide_loaded_splashes(self, real=None):
+        """Hide only this app's stale WSA loader after its UI is confirmed."""
+        real = real or self.find()
+        if not real:
+            return
+        owner = wt.DWORD()
+        self.user.GetWindowThreadProcessId(real, ctypes.byref(owner))
+
+        @self.callback_type
+        def visit(hwnd, _):
+            if not self.user.IsWindowVisible(hwnd):
+                return True
+            window_class = ctypes.create_unicode_buffer(256)
+            self.user.GetClassNameW(hwnd, window_class, len(window_class))
+            if window_class.value == "com.phoenix.read(splash)":
+                pid = wt.DWORD()
+                self.user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                if pid.value == owner.value:
+                    # Closing the loader could cancel a WSA activation. Hide
+                    # it without stopping or sending messages to the app.
+                    self.user.ShowWindow(hwnd, 0)
+            return True
+
+        self.user.EnumWindows(visit, 0)
 
     def resize(self, hwnd: int, layout: PlayerLayout, landscape: bool, manual: bool = False) -> bool:
         # Background adaptation must not restore a minimized window or undo a

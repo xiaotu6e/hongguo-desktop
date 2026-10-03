@@ -20,23 +20,33 @@ class ManagerTests(unittest.TestCase):
     def setUp(self):
         self.calls = []
         self.responses = []
+        self.clock = 0.0
+        clock_patch = patch("desktop_manager.android.time.monotonic", side_effect=lambda: self.clock)
+        clock_patch.start()
+        self.addCleanup(clock_patch.stop)
+        def sleep(seconds):
+            self.clock += seconds
+        sleep_patch = patch("desktop_manager.android.time.sleep", side_effect=sleep)
+        sleep_patch.start()
+        self.addCleanup(sleep_patch.stop)
         def run(args, timeout):
+            self.clock += 1
             self.calls.append(args)
             code, out, err = self.responses.pop(0) if self.responses else (0, "", "")
             return subprocess.CompletedProcess(args, code, out, err)
         self.manager = AndroidManager(Settings(keep_wsa_direct=False), runner=run, adb=Path("adb.exe"))
         self.manager.installation = WsaInstallation(Path("WSA"), "WSA_family")
+        self.manager._server_started = True
 
     def test_ready_wsa_does_not_activate_an_app_or_files_to_connect(self):
-        self.responses = [(0, "", ""), (0, "device\n", ""),
-                          (0, "device\n", ""), (0, "1\n", "")]
+        self.responses = [(0, "", ""), (0, "device\n", ""), (0, "1\n", "")]
         with patch("desktop_manager.android.os.startfile") as activate:
             self.assertFalse(self.manager.ensure_ready())
         activate.assert_not_called()
 
     def test_cold_connect_wakes_the_favorite_without_opening_files(self):
         self.responses = [(0, "", ""), (1, "", "offline"),
-                          (0, "device\n", ""), (0, "1\n", "")]
+                          (0, "", ""), (0, "device\n", ""), (0, "1\n", "")]
         with patch("desktop_manager.android.os.startfile") as activate:
             self.assertTrue(self.manager.ensure_ready())
         activate.assert_called_once_with("wsa://" + self.manager.settings.favorite)
@@ -45,9 +55,9 @@ class ManagerTests(unittest.TestCase):
         package = "com.example.player"
         ready = f'  Window #1 Window{{123 u0 {package}/MainActivity}}:\n mHasSurface=true mDrawState=HAS_DRAWN\n'
         self.responses = [(0, "", ""), (1, "", "offline"),
-                          (0, "device\n", ""), (0, "1\n", ""),
+                          (0, "", ""), (0, "device\n", ""), (0, "1\n", ""),
                           (0, "package:/data/app/player.apk\n", ""),
-                          (0, "123\n", ""), (0, ready, "")]
+                          (0, ready, "")]
         with patch("desktop_manager.android.os.startfile") as activate, patch("desktop_manager.android.time.sleep"):
             self.manager.launch(package)
         activate.assert_called_once_with("wsa://" + package)
@@ -55,7 +65,7 @@ class ManagerTests(unittest.TestCase):
     def test_cold_install_wakes_the_favorite_and_keeps_its_package_validation(self):
         info = ApkInfo(Path("C:/example/app.apk"), "com.example.newapp", "测试应用", "1", 1)
         self.responses = [(0, "", ""), (1, "", "offline"),
-                          (0, "device\n", ""), (0, "1\n", ""),
+                          (0, "", ""), (0, "device\n", ""), (0, "1\n", ""),
                           (0, "Success\n", ""), (0, "package:/data/app/new.apk\n", "")]
         with patch("desktop_manager.android.inspect_apk", return_value=info), \
                 patch("desktop_manager.android.os.startfile") as activate:
@@ -66,7 +76,7 @@ class ManagerTests(unittest.TestCase):
     def test_missing_custom_app_keeps_the_install_prompt_after_a_cold_wake(self):
         package = "com.example.missing"
         self.responses = [(0, "", ""), (1, "", "offline"),
-                          (0, "device\n", ""), (0, "1\n", ""), (1, "", "")]
+                          (0, "", ""), (0, "device\n", ""), (0, "1\n", ""), (1, "", "")]
         with patch("desktop_manager.android.os.startfile") as activate:
             with self.assertRaisesRegex(OperationError, "尚未安装"):
                 self.manager.launch(package)
@@ -223,7 +233,7 @@ class ManagerTests(unittest.TestCase):
 
     def test_cold_boot_dropped_activation_is_retried_before_process_exists(self):
         ready = '  Window #5 Window{123 u0 com.phoenix.read/com.example.MainActivity}:\n mHasSurface=true mDrawState=HAS_DRAWN\n'
-        self.responses = [(1, "", "")] * 6 + [(0, "123\n", ""), (0, ready, "")]
+        self.responses = [(0, "", ""), (1, "", "")] * 4 + [(0, ready, "")]
         with patch.object(self.manager, "ensure_ready", return_value=False), patch.object(self.manager, "is_installed", return_value=True), \
                 patch("desktop_manager.android.os.startfile") as activate, patch("desktop_manager.android.time.sleep"):
             self.manager.launch(HONGGUO)
@@ -232,7 +242,7 @@ class ManagerTests(unittest.TestCase):
 
     def test_running_app_with_a_splash_is_not_repeatedly_activated(self):
         splash = '  Window #5 Window{123 u0 Splash Screen com.phoenix.read}:\n mHasSurface=true mDrawState=HAS_DRAWN\n'
-        self.responses = [(0, "123\n", ""), (0, splash, "")] * 30
+        self.responses = [(0, splash, ""), (0, "123\n", "")] * 30
         with patch.object(self.manager, "ensure_ready", return_value=False), patch.object(self.manager, "is_installed", return_value=True), \
                 patch("desktop_manager.android.os.startfile") as activate, patch("desktop_manager.android.time.sleep"):
             with self.assertRaises(OperationError):

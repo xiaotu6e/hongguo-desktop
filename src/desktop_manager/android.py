@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import subprocess
 import time
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -24,6 +26,31 @@ class OperationError(RuntimeError):
     pass
 
 
+class CommandTimeout(OperationError):
+    """A timed out local command, with enough context to diagnose its stage."""
+
+    def __init__(self, args, timeout):
+        self.args_run = list(args)
+        self.timeout = timeout
+        if any("ShutdownAndroidButton" in str(arg) for arg in args):
+            stage = "通过 WSA 设置关闭 Android"
+        elif any("Get-AppxPackage" in str(arg) for arg in args):
+            stage = "检测 Windows 中的 WSA 安装"
+        elif "start-server" in args:
+            stage = "启动本机 Android 连接服务"
+        elif "connect" in args or "get-state" in args:
+            stage = "连接本机 Android"
+        elif "dumpsys" in args:
+            stage = "读取 Android 窗口状态"
+        elif "push" in args:
+            stage = "准备播放辅助组件"
+        elif "shell" in args:
+            stage = "读取或设置 Android 状态"
+        else:
+            stage = "运行本机组件"
+        super().__init__(f"{stage}等待超过 {timeout:g} 秒。")
+
+
 @dataclass(frozen=True)
 class WsaInstallation:
     location: Path
@@ -39,15 +66,15 @@ def run_process(args: list[str], timeout: float = 20) -> subprocess.CompletedPro
         return subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace",
                               stdin=subprocess.DEVNULL, timeout=timeout, creationflags=NO_WINDOW)
     except subprocess.TimeoutExpired as error:
-        raise OperationError("操作等待超时，请检查运行状态后重试。") from error
+        raise CommandTimeout(args, timeout) from error
     except OSError as error:
         raise OperationError(f"无法运行所需组件：{error}") from error
 
 
-def find_wsa() -> WsaInstallation:
+def find_wsa(timeout=25) -> WsaInstallation:
     script = "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; Get-AppxPackage -Name MicrosoftCorporationII.WindowsSubsystemForAndroid | Select-Object -First 1 InstallLocation,PackageFamilyName | ConvertTo-Json -Compress"
     powershell = str(Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe")
-    result = run_process([powershell, "-NoProfile", "-NonInteractive", "-Command", script], timeout=25)
+    result = run_process([powershell, "-NoProfile", "-NonInteractive", "-Command", script], timeout=timeout)
     try:
         data = json.loads(result.stdout.strip().lstrip("\ufeff"))
         installation = WsaInstallation(Path(data["InstallLocation"]), data["PackageFamilyName"])
@@ -90,24 +117,86 @@ class AndroidManager:
         self.runner = runner
         self.adb = adb or adb_binary()
         self.installation: WsaInstallation | None = None
+        self.connection_state = "unknown"
+        self.last_command = None
+        self.last_connection_error = None
+        self._server_started = False
+        self._server_lock = threading.Lock()
+        self.log = logging.getLogger("hongguo-desktop")
 
     def command(self, *args: str, timeout: float = 20, device: bool = True) -> subprocess.CompletedProcess:
         base = [str(self.adb), "-P", str(self.settings.server_port)]
         if device:
             base.extend(["-s", self.settings.endpoint])
-        return self.runner(base + list(args), timeout=timeout)
+        started = time.monotonic()
+        record = {"operation": " ".join(args[:4]), "timeout_s": timeout}
+        try:
+            result = self.runner(base + list(args), timeout=timeout)
+            record["returncode"] = result.returncode
+            if device:
+                output = result.stdout + result.stderr
+                if "unauthorized" in output:
+                    self.connection_state = "unauthorized"
+                elif re.search(r"device(?: [^\n]*)? (?:offline|not found)", output) or any(text in output for text in ("no devices/emulators", "cannot connect", "cannot read response")):
+                    self.connection_state = "offline"
+                    self._server_started = False
+                elif result.returncode == 0:
+                    self.connection_state = "device"
+            return result
+        except CommandTimeout as error:
+            record["error"] = str(error)
+            self.last_connection_error = record.copy()
+            self.log.warning("Android 命令超时：%s；限时 %.2fs", record["operation"], timeout)
+            raise
+        finally:
+            record["elapsed_ms"] = round((time.monotonic() - started) * 1000, 1)
+            self.last_command = record
+            if record["elapsed_ms"] >= 1000:
+                self.log.info("Android 慢命令：%s；%.1fms", record["operation"], record["elapsed_ms"])
 
-    def state(self) -> str:
-        result = self.command("get-state", timeout=5)
+    def start_server(self, timeout=15, *, force=False):
+        # ADB's first daemon startup can take over five seconds. Give that
+        # startup its own budget instead of killing a short connect command.
+        with self._server_lock:
+            if self._server_started and not force:
+                return
+            result = self.command("start-server", device=False, timeout=timeout)
+            if result.returncode:
+                raise OperationError("本机 Android 连接服务启动失败：" + result.stderr.strip()[-300:])
+            self._server_started = True
+
+    def reconnect(self, timeout=3, budget=21) -> str:
+        """Repair the local transport without waking apps or restarting WSA."""
+        try:
+            deadline = time.monotonic() + budget
+            # A previously healthy daemon may have disappeared since the
+            # cached check. An explicit repair must bootstrap before connect,
+            # even when this manager previously started the server.
+            self.start_server(timeout=min(15, budget), force=True)
+            self.command("connect", self.settings.endpoint, device=False, timeout=min(timeout, max(.1, deadline-time.monotonic())))
+            return self.state(timeout=min(timeout, max(.1, deadline-time.monotonic())))
+        except CommandTimeout:
+            self.connection_state = "offline"
+            self._server_started = False
+            return "offline"
+
+    def state(self, timeout=3) -> str:
+        try:
+            result = self.command("get-state", timeout=timeout)
+        except CommandTimeout:
+            self.connection_state = "offline"
+            self._server_started = False
+            return "offline"
         combined = result.stdout + result.stderr
         if "unauthorized" in combined:
-            return "unauthorized"
-        return "device" if result.returncode == 0 and result.stdout.strip() == "device" else "offline"
+            self.connection_state = "unauthorized"
+        else:
+            self.connection_state = "device" if result.returncode == 0 and result.stdout.strip() == "device" else "offline"
+        return self.connection_state
 
     def detect(self) -> dict:
-        self.installation = find_wsa()
-        self.command("connect", self.settings.endpoint, device=False, timeout=5)
-        connected = self.state() == "device"
+        self.installation = self.installation or find_wsa()
+        connected = self.reconnect() == "device"
         self.notify("检测完成，Android 已连接" if connected else "已找到 WSA，点击启动即可连接")
         return {"installed": True, "connected": connected, "location": str(self.installation.location)}
 
@@ -115,34 +204,36 @@ class AndroidManager:
         """Connect WSA; return whether its target app URI was used to wake it."""
         wake_package = wake_package or self.settings.favorite
         self.validate_package(wake_package)
+        deadline = time.monotonic() + self.settings.startup_timeout
         if self.installation is None:
             self.notify("正在识别 Android 环境…")
-            self.installation = find_wsa()
+            self.installation = find_wsa(timeout=min(25, max(.1, deadline-time.monotonic())))
         self.notify("正在连接 Android…")
-        self.command("connect", self.settings.endpoint, device=False, timeout=5)
-        state = self.state()
         activated = False
-        if state == "unauthorized":
-            raise OperationError("请在 WSA 弹出的连接授权窗口选择“允许”，然后点“重试”。")
-        if state != "device":
-            self.notify("正在唤醒 WSA，首次启动可能需要一点时间…")
-            # The registered protocol starts WSA and its requested app. Using
-            # DocumentsUI here opened a second, unwanted Files window every
-            # cold start. Generic connect/install uses the chosen favorite.
-            os.startfile("wsa://" + wake_package)
-            activated = True
-        deadline = time.monotonic() + self.settings.startup_timeout
-        next_wake = time.monotonic() + 12
+        next_wake = 0.0
         while time.monotonic() < deadline:
-            state = self.state()
+            remaining = deadline - time.monotonic()
+            try:
+                self.start_server(timeout=min(15, remaining))
+                if self.connection_state != "device":
+                    self.command("connect", self.settings.endpoint, device=False, timeout=min(3, max(.1, deadline-time.monotonic())))
+                state = self.state(timeout=min(3, max(.1, deadline-time.monotonic())))
+            except CommandTimeout:
+                # Short probes can time out while Android is booting. They
+                # must not abort the entire user-configured startup budget.
+                self.connection_state = state = "offline"
+                self._server_started = False
             if state == "unauthorized":
                 raise OperationError("请在 WSA 弹出的连接授权窗口选择“允许”，然后点“重试”。")
             if state == "device":
-                boot = self.command("shell", "getprop", "sys.boot_completed", timeout=6)
-                if boot.returncode == 0 and boot.stdout.strip() == "1":
+                try:
+                    boot = self.command("shell", "getprop", "sys.boot_completed", timeout=min(3, max(.1, deadline-time.monotonic())))
+                except CommandTimeout:
+                    boot = None
+                if boot is not None and boot.returncode == 0 and boot.stdout.strip() == "1":
                     if self.settings.keep_wsa_direct:
                         try:
-                            self.configure_direct_network()
+                            self.configure_direct_network(timeout=2)
                         except OperationError as error:
                             self.notify("安卓直连设置未完成：" + str(error) + " 应用将继续启动。")
                     self.notify("Android 已就绪")
@@ -151,32 +242,39 @@ class AndroidManager:
                 # Windows can drop an activation while a previous WSA instance
                 # is still shutting down. Retry within the user's timeout.
                 os.startfile("wsa://" + wake_package)
+                if not activated:
+                    self.notify("正在唤醒 WSA，首次启动可能需要一点时间…")
                 activated = True
                 next_wake = time.monotonic() + 15
-            time.sleep(2)
-            self.command("connect", self.settings.endpoint, device=False, timeout=5)
+            time.sleep(min(.5, max(0, deadline-time.monotonic())))
         raise OperationError("WSA 已尝试启动，但连接未就绪。请打开“WSA 设置 → 高级设置”，确认开发人员模式开启，地址为 " + self.settings.endpoint + "。若 WSA 正在启动，稍等后重试。")
 
-    def read_network_proxy(self) -> dict[str, str]:
-        result = self.command("shell", "settings", "list", "global", timeout=8)
+    def read_network_proxy(self, timeout=8) -> dict[str, str]:
+        result = self.command("shell", "settings", "list", "global", timeout=timeout)
         if result.returncode or "SecurityException" in result.stdout + result.stderr:
             raise OperationError("无法读取安卓代理配置，请确认 WSA 已连接。")
         values = dict(line.partition("=")[::2] for line in result.stdout.splitlines() if "=" in line)
         return {key: values.get(key, "") for key in PROXY_KEYS}
 
-    def configure_direct_network(self) -> str:
+    def configure_direct_network(self, timeout=8) -> str:
         """Persist no explicit Android proxy; host VPN/TUN routing is untouched."""
-        before = self.read_network_proxy()
+        deadline = time.monotonic() + timeout
+        def remaining():
+            value = deadline - time.monotonic()
+            if value <= 0:
+                raise CommandTimeout(["shell", "settings", "global"], timeout)
+            return value
+        before = self.read_network_proxy(timeout=remaining())
         # Android persists these Global settings across WSA restarts. Do not
         # rewrite an already correct configuration or change Windows proxies.
         changes = [("put", "global", "http_proxy", ":0")] if before["http_proxy"] != ":0" else []
         changes += [("delete", "global", key) for key in PROXY_KEYS[1:]
                     if before[key] not in NO_PROXY_VALUES[key]]
         for args in changes:
-            result = self.command("shell", "settings", *args, timeout=8)
+            result = self.command("shell", "settings", *args, timeout=remaining())
             if result.returncode or re.search(r"SecurityException|Permission denial|Error", result.stdout + result.stderr):
                 raise OperationError("安卓未接受直连设置，请检查连接权限。")
-        after = self.read_network_proxy() if changes else before
+        after = self.read_network_proxy(timeout=remaining()) if changes else before
         if after["http_proxy"] != ":0" or any(after[key] not in NO_PROXY_VALUES[key] for key in PROXY_KEYS[1:]):
             raise OperationError("安卓代理仍有残留，直连设置未确认成功。")
         message = "WSA 显式代理已关闭，电脑代理设置保持原样。"
@@ -186,7 +284,7 @@ class AndroidManager:
 
 
     def list_apps(self) -> list[dict]:
-        result = self.command("shell", "cmd", "package", "list", "packages", "-3")
+        result = self.command("shell", "cmd", "package", "list", "packages", "-3", timeout=4)
         if result.returncode:
             raise OperationError("无法读取应用列表，请先连接 Android。")
         packages = sorted({line.partition(":")[2].strip() for line in result.stdout.splitlines()
@@ -230,19 +328,26 @@ class AndroidManager:
         # registered app entry; starting its binary directly can silently do nothing.
         if not activated:
             os.startfile("wsa://" + package)
-        for attempt in range(30):
-            time.sleep(2)
-            result = self.command("shell", "pidof", package, timeout=5)
-            if result.returncode == 0 and result.stdout.strip():
-                windows = self.command("shell", "dumpsys", "window", "windows", timeout=8)
-                if app_window_drawn(windows.stdout, package):
+        deadline = time.monotonic() + min(60, self.settings.startup_timeout)
+        next_activation = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            try:
+                windows = self.command("shell", "dumpsys", "window", "windows", timeout=min(3, max(.1, deadline-time.monotonic())))
+                if windows.returncode == 0 and app_window_drawn(windows.stdout, package):
                     self.notify("应用界面已打开，请在独立窗口中使用")
                     return
-            elif attempt in (5, 11, 17):
+                result = self.command("shell", "pidof", package, timeout=min(2, max(.1, deadline-time.monotonic())))
+            except CommandTimeout:
+                if self.reconnect(timeout=2, budget=max(.1, deadline-time.monotonic())) == "unauthorized":
+                    raise OperationError("Android 连接需要授权，请在 WSA 授权窗口中选择允许。")
+                result = None
+            if result is not None and result.returncode and time.monotonic() >= next_activation:
                 # Android can finish booting before Windows accepts app URI
                 # activation. Retry only while no app process has appeared.
                 os.startfile("wsa://" + package)
-        raise OperationError("应用界面未能打开，请查看 Android 窗口中是否有首次使用提示；若停在启动画面，可在“我的应用”中关闭后重新打开。")
+                next_activation = time.monotonic() + 12
+            time.sleep(min(.5, max(0, deadline-time.monotonic())))
+        raise OperationError("Android 启动流程已结束，但未确认应用窗口就绪。请查看应用是否停在启动画面或首次使用提示；已有窗口可继续使用。")
 
     def stop_app(self, package: str) -> None:
         self.validate_package(package)
@@ -279,6 +384,20 @@ class AndroidManager:
         self.notify("Android 显示设置已生效")
 
     def shutdown(self) -> None:
+        if self.state() == "device":
+            self.notify("正在正常关闭 Android…")
+            try:
+                # Android's power service flushes application/system state.
+                # ADB commonly exits 255 as the VM disconnects during shutdown.
+                self.command("shell", "svc", "power", "shutdown", timeout=5)
+            except CommandTimeout:
+                pass
+            deadline = time.monotonic() + 12
+            while time.monotonic() < deadline:
+                if self.state(timeout=2) != "device":
+                    self.notify("Android 已关闭")
+                    return
+                time.sleep(.25)
         self.notify("正在通过 WSA 设置关闭 Android…")
         open_wsa_settings()
         script = Path(__file__).resolve().parents[1] / "assets/wsa-shutdown.ps1"
@@ -306,7 +425,7 @@ def app_window_drawn(output: str, package: str) -> bool:
     # A live PID or Android's generic splash window alone is not a ready app.
     for section in re.split(r"(?m)^  Window #", output):
         header = section.partition("\n")[0]
-        if " u0 " + package + "/" in header and "mHasSurface=true" in section and "mDrawState=HAS_DRAWN" in section:
+        if " u0 " + package + "/" in header and "mHasSurface=true" in section and "mDrawState=HAS_DRAWN" in section and "isVisible=false" not in section:
             return True
     return False
 

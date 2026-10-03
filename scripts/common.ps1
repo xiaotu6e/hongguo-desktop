@@ -107,13 +107,14 @@ function Save-InstallRecord {
 }
 
 function New-HelperShortcut {
-    param([string]$Executable, [string]$Arguments = '', [string]$WorkingDirectory)
+    param([string]$Executable, [string]$Arguments = '', [string]$WorkingDirectory, [string]$IconExecutable = '')
     $shell = New-Object -ComObject WScript.Shell
     foreach ($directory in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) {
         $shortcut = $shell.CreateShortcut((Join-Path $directory 'Hongguo Desktop Helper.lnk'))
         $shortcut.TargetPath = $Executable
         $shortcut.Arguments = $Arguments
         $shortcut.WorkingDirectory = $WorkingDirectory
+        if ($IconExecutable) { $shortcut.IconLocation = $IconExecutable + ',0' }
         $shortcut.Description = 'Hongguo Desktop Helper - WSA'
         $shortcut.Save()
     }

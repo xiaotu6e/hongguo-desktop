@@ -1,4 +1,4 @@
-﻿param([string]$Repository = 'xiaotu6e/hongguo-desktop', [switch]$WithRelease, [string]$Version = 'v0.1.2')
+﻿param([string]$Repository = 'xiaotu6e/hongguo-desktop', [switch]$WithRelease, [string]$Version = 'v0.1.8')
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Invalid repository name.' }
@@ -29,7 +29,7 @@ try {
         Invoke-Checked 'git' @('push','-u','origin','main')
     }
     if ($WithRelease) {
-        $release = Get-Content -LiteralPath 'manifests\release.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+        $release = Get-Content -LiteralPath 'dist\release.json' -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($release.version -ne $Version) { throw 'Release manifest version does not match.' }
         $bundle = Join-Path $script:ProjectRoot ('dist\' + $release.filename)
         if ((Get-Sha256 $bundle) -ne $release.sha256) { throw 'Release bundle checksum mismatch.' }

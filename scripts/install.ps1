@@ -1,6 +1,6 @@
 ﻿param(
-    [ValidateSet('Source','Release')][string]$Mode = 'Source',
-    [string]$Version = 'v0.1.2',
+    [ValidateSet('Source','Release')][string]$Mode = 'Release',
+    [string]$Version = 'v0.1.8',
     [string]$Repository = 'xiaotu6e/hongguo-desktop',
     [string]$PythonPath = '',
     [string]$BundlePath = '',
@@ -35,6 +35,7 @@ if ($Mode -eq 'Source') {
     $executable = Join-Path $script:ProjectRoot '.venv\Scripts\pythonw.exe'
     $entry = Join-Path $script:ProjectRoot 'src\main.py'
     $launchArguments = '"' + $entry + '"'
+    $launcher = $executable
     $working = $script:ProjectRoot
     $adb = Join-Path $script:ProjectRoot 'src\assets\platform-tools\adb.exe'
 } else {
@@ -54,18 +55,21 @@ if ($Mode -eq 'Source') {
         New-Item -ItemType Directory -Force -Path (Split-Path -Parent $working) | Out-Null
         Expand-SafeZip $bundle $stage
         if (-not (Test-Path -LiteralPath (Join-Path $stage 'hongguo_desktop.exe'))) { throw 'Invalid helper bundle.' }
+        if (-not (Test-Path -LiteralPath (Join-Path $stage 'helper-guardian.exe'))) { throw 'Helper bundle lacks its background guardian.' }
         if (Test-Path -LiteralPath $working) { throw 'Incomplete installation directory exists. Choose another -InstallDirectory.' }
         New-Item -ItemType File -Path (Join-Path $stage '.installed') | Out-Null
         Move-Item -LiteralPath $stage -Destination $working
     }
     $launchArguments = ''
+    $launcher = Join-Path $working 'helper-guardian.exe'
+    if (-not (Test-Path -LiteralPath $launcher)) { throw 'Installed helper lacks its background guardian. Use a complete new installation directory.' }
     $adb = Join-Path $working 'app\assets\platform-tools\adb.exe'
 }
 Save-InstallRecord ([ordered]@{ version=$Version; mode=$Mode; executable=$executable; arguments=$launchArguments;
-    working_directory=$working; adb=$adb; installed_at=[DateTime]::UtcNow.ToString('o') })
+    launcher=$launcher; working_directory=$working; adb=$adb; installed_at=[DateTime]::UtcNow.ToString('o') })
 $shell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 Invoke-Checked $shell @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'doctor.ps1'),'-NoConnect')
-if (-not $NoShortcut) { New-HelperShortcut $executable $launchArguments $working }
+if (-not $NoShortcut) { New-HelperShortcut $launcher $launchArguments $working -IconExecutable $executable }
 if ($ApkPath) {
     $apk = (Resolve-Path -LiteralPath $ApkPath).Path
     if ([IO.Path]::GetExtension($apk) -ne '.apk') { throw '-ApkPath must point to an APK.' }
@@ -75,7 +79,7 @@ if ($ApkPath) {
     Invoke-Checked $adb @('-P','5038','-s','127.0.0.1:58526','install','-r',$apk)
 }
 if ($Launch) {
-    if ($launchArguments) { Start-Process -FilePath $executable -ArgumentList $launchArguments -WorkingDirectory $working -WindowStyle Hidden }
-    else { Start-Process -FilePath $executable -WorkingDirectory $working -WindowStyle Hidden }
+    if ($launchArguments) { Start-Process -FilePath $launcher -ArgumentList $launchArguments -WorkingDirectory $working -WindowStyle Hidden }
+    else { Start-Process -FilePath $launcher -WorkingDirectory $working -WindowStyle Hidden }
 }
 Write-Host "Helper installed ($Mode). Run scripts/doctor.ps1 and confirm actual playback."

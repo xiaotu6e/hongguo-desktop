@@ -64,7 +64,24 @@ public final class HongguoUi {
         return "["+RectFields.LEFT.getInt(r)+","+RectFields.TOP.getInt(r)+","+
             RectFields.RIGHT.getInt(r)+","+RectFields.BOTTOM.getInt(r)+"]";
     }
+    static void clearUiCache() throws Exception {
+        // A rotated WSA surface can precede accessibility invalidation by
+        // several seconds. Refresh this bridge's node/window cache before a
+        // read or a checked action; this never changes APP data or its cache.
+        try {
+            get(ui,"clearCache"); // Public on Android 14+.
+        } catch(NoSuchMethodException olderAndroid) {
+            Class<?> type=cls("android.view.accessibility.AccessibilityInteractionClient");
+            Object client=method(type,"getInstance",NO_TYPES).invoke(null,NO_ARGS);
+            try {
+                call(client,"clearCache",new Class<?>[]{int.class},get(ui,"getConnectionId"));
+            } catch(NoSuchMethodException legacyAndroid) {
+                get(client,"clearCache");
+            }
+        }
+    }
     static List<Object> roots() throws Exception {
+        clearUiCache();
         List<Object> out=new ArrayList<>();
         for(Object w:(List<?>)get(ui,"getWindows")) {
             try {
@@ -200,6 +217,9 @@ public final class HongguoUi {
                 if(rootIndex!=0) return "{\"ok\":false,\"reason\":\"covered\"}";
                 return back();
             }
+            if(a[0].equals("validate")) {
+                return "{\"ok\":"+(rootIndex==0)+"}";
+            }
             if(a[0].equals("tap")) {
                 Object w=get(n,"getWindow");
                 if(w==null) return "{\"ok\":false}";
@@ -268,7 +288,7 @@ public final class HongguoUi {
                 if(line.equals("quit")) break;
                 try {
                     String[] a=line.split("\t",-1);
-                    System.out.println(a[0].equals("snapshot") ? snapshot() : a[0].equals("back") ? back() : a[0].equals("wheel") && a.length==4 ? wheel(a) : (a[0].equals("click") || a[0].equals("tap") || a[0].equals("dismiss")) && a.length==5 ? click(a) : "{\"ok\":false,\"reason\":\"unknown\"}");
+                    System.out.println(a[0].equals("snapshot") ? snapshot() : a[0].equals("back") ? back() : a[0].equals("wheel") && a.length==4 ? wheel(a) : (a[0].equals("click") || a[0].equals("tap") || a[0].equals("validate") || a[0].equals("dismiss")) && a.length==5 ? click(a) : "{\"ok\":false,\"reason\":\"unknown\"}");
                 } catch(Exception e) { System.out.println("{\"ok\":false,\"error\":"+quote(e.toString())+"}"); }
                 System.out.flush();
             }

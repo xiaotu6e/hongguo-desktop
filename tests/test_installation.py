@@ -2,7 +2,9 @@
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -49,7 +51,7 @@ class PowerShellTests(unittest.TestCase):
         result = self.powershell("& './scripts/install.ps1' -DryRun -InstallWsa -RepairWsa -Launch")
         self.assertEqual(result.returncode, 0, result.stderr)
         plan = json.loads(result.stdout)
-        self.assertEqual(plan['mode'], 'Source')
+        self.assertEqual(plan['mode'], 'Release')
         self.assertTrue(plan['install_wsa'])
         self.assertTrue(plan['repair_wsa'])
 
@@ -78,6 +80,64 @@ class PowerShellTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('escapes installation directory', result.stderr)
             self.assertFalse((root / 'outside.txt').exists())
+
+    def run_release_install(self, root, guardian=True):
+        scripts = root / 'scripts'
+        scripts.mkdir()
+        for name in ['common.ps1', 'install.ps1', 'doctor.ps1']:
+            shutil.copy2(ROOT / 'scripts' / name, scripts / name)
+        with (scripts / 'common.ps1').open('a', encoding='utf-8') as stream:
+            stream.write('''
+function Get-WsaInstallation { [pscustomobject]@{Version='fixture'} }
+function New-HelperShortcut {
+    param($Executable, $Arguments, $WorkingDirectory, $IconExecutable)
+    [ordered]@{target=$Executable;working=$WorkingDirectory;icon=$IconExecutable} |
+        ConvertTo-Json | Set-Content -LiteralPath (Join-Path $script:ProjectRoot 'shortcut.json') -Encoding UTF8
+}
+''')
+        bundle = root / 'bundle.zip'
+        with zipfile.ZipFile(bundle, 'w') as archive:
+            archive.writestr('hongguo_desktop.exe', b'fixture-main')
+            archive.writestr('app/assets/platform-tools/adb.exe', b'fixture-adb')
+            if guardian:
+                archive.writestr('helper-guardian.exe', b'fixture-guardian')
+        manifests = root / 'manifests'
+        manifests.mkdir()
+        (manifests / 'release.json').write_text(json.dumps({
+            'version': 'v0.1.8', 'filename': 'bundle.zip',
+            'sha256': hashlib.sha256(bundle.read_bytes()).hexdigest()
+        }), encoding='utf-8')
+        env = os.environ.copy()
+        env['LOCALAPPDATA'] = str(root / 'user-data')
+        result = subprocess.run([
+            'powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+            '-File', str(scripts / 'install.ps1'), '-Mode', 'Release',
+            '-BundlePath', str(bundle), '-InstallDirectory', str(root / 'program')
+        ], capture_output=True, text=True, encoding='utf-8', errors='replace', env=env, timeout=40)
+        return result
+
+    def test_release_shortcut_uses_guardian_and_record_preserves_main_for_version_checks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = self.run_release_install(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            record = json.loads((root / 'user-data/HongguoDesktopHelper/installation.json').read_text(encoding='utf-8-sig'))
+            shortcut = json.loads((root / 'shortcut.json').read_text(encoding='utf-8-sig'))
+            self.assertEqual(Path(record['executable']).name, 'hongguo_desktop.exe')
+            self.assertEqual(Path(shortcut['target']).name, 'helper-guardian.exe')
+            self.assertEqual(shortcut['target'], record['launcher'])
+            self.assertEqual(shortcut['icon'], record['executable'])
+            self.assertEqual(shortcut['working'], record['working_directory'])
+            self.assertTrue(Path(record['launcher']).is_file())
+
+    def test_release_without_guardian_never_creates_install_record_or_shortcut(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = self.run_release_install(root, guardian=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('background guardian', result.stderr)
+            self.assertFalse((root / 'shortcut.json').exists())
+            self.assertFalse((root / 'user-data/HongguoDesktopHelper/installation.json').exists())
 
 
 if __name__ == '__main__':

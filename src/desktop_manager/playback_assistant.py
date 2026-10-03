@@ -162,7 +162,7 @@ class EntryPolicy:
 
 
 class PlaybackAssistant:
-    def __init__(self, manager, emit, history=None, prepare_landscape=None):
+    def __init__(self, manager, emit, history=None, prepare_landscape=None, activate_fullscreen=None):
         self.manager, self.emit = manager, emit
         self.bridge = UiBridge(manager)
         self.history = history or WatchHistory()
@@ -189,6 +189,7 @@ class PlaybackAssistant:
         self.fast_until = 0.0
         self.manual_navigation_until = 0.0
         self.prepare_landscape = prepare_landscape
+        self.activate_fullscreen = activate_fullscreen
         self.landscape_preparing = False
         self.landscape_ready_at = None
         self.landscape_clicked = False
@@ -196,6 +197,8 @@ class PlaybackAssistant:
         self.landscape_manual = False
         self.landscape_mode = None
         self.landscape_cached = False
+        self.landscape_observed = False
+        self.landscape_feed_pending = False
         self.last_landscape = None
         self.last_settings = self.preferences()
 
@@ -246,6 +249,8 @@ class PlaybackAssistant:
         self.landscape_manual = False
         self.landscape_mode = None
         self.landscape_cached = False
+        self.landscape_observed = False
+        self.landscape_feed_pending = False
 
     def cancel_landscape(self):
         if self.landscape_preparing:
@@ -265,7 +270,7 @@ class PlaybackAssistant:
         }
 
     def _finish_landscape(self, success, reason=None):
-        origin, manual = self.landscape_origin, self.landscape_manual
+        origin, manual = self.landscape_origin, self.landscape_manual and not self.landscape_observed
         self._record_landscape(reason or ("landscape_entered" if success else "cancelled"), ok=bool(success))
         self._clear_landscape()
         self.stage = ""
@@ -287,17 +292,48 @@ class PlaybackAssistant:
             self._record_landscape("fullscreen_unavailable")
             return False
         self.landscape_origin = (screen.kind, screen.title, screen.episode)
+        if manual and screen.kind == "player" and screen.title:
+            # An explicit fullscreen request owns this already observed entry,
+            # even if fullscreen later times out. Never run the smart-start
+            # policy afterward and rewind the episode the user just selected.
+            self.title = self.policy.active = screen.title
+            self.episode = screen.episode
+            self.policy.pending, self.policy.preview, self.policy.decided = None, None, True
+            if screen.episode:
+                self.history.record(screen.title, screen.episode)
         # Manual clicks remain available, but they consume any automatic attempt.
         self.consume_fullscreen(screen.title)
         self.landscape_manual = manual
         self.landscape_mode = self.manager.settings.window_mode
         self.landscape_ready_at = None
         self.landscape_clicked = False
+        self.landscape_feed_pending = False
         self.landscape_preparing = True
         self.stage, self.deadline = "landscape_prepare", now+4
         self.fast_until = time.monotonic()+1.2
         self.last_landscape = {"manual": manual, "window_mode": self.landscape_mode, "callback": None}
         self._record_landscape("preparing")
+        if screen.kind == "feed":
+            # The recommendation page removes Fullscreen when its root becomes
+            # wide. Enter the same series through its visible episode entry
+            # first. Its player keeps Fullscreen in a wide layout, allowing the
+            # existing pre-creation sizing to protect the episode panel width.
+            entry = screen.ident("arc")
+            if not entry or not entry.get("enabled", True):
+                self._finish_landscape(False, "feed_entry_unavailable")
+                return False
+            self.landscape_feed_pending = True
+            self._record_landscape("feed_entry_sending", callback="feed_player_entry")
+            try:
+                clicked = self.click(entry, now)
+            except Exception:
+                self._finish_landscape(False, "click_error")
+                raise
+            if not clicked:
+                self._finish_landscape(False, "click_rejected")
+                return False
+            self._record_landscape("feed_entry_sent")
+            return True
         # True requests a resize, None preserves fixed portrait/maximized or
         # legacy callers, and False rejects a missing/minimized window.
         try:
@@ -313,12 +349,19 @@ class PlaybackAssistant:
         if prepared is None:
             self.landscape_clicked = True
             try:
-                clicked = self.click(node, now)
+                clicked = self.click(node, now, tap=True)
             except Exception:
                 self._finish_landscape(False, "click_error")
                 raise
             self._finish_landscape(clicked, "unresized_click_sent" if clicked else "click_rejected")
             return clicked
+        if self.landscape_cached:
+            # This app process already initialized its landscape resources.
+            # The fresh snapshot and visible button are ready now; don't wait
+            # for the idle observer's next scheduled tick to send the click.
+            self._advance_landscape(screen, now)
+            if not self.landscape_preparing:
+                return bool(self.last_landscape.get("ok"))
         return True
 
     def request_landscape(self, now=None):
@@ -334,8 +377,7 @@ class PlaybackAssistant:
             return {"ok": False, "method": "landscape_prepare"}
         if previous.kind in {"feed", "player"}:
             changed = (previous.kind != screen.kind
-                       or bool(previous.title and screen.title and previous.title != screen.title)
-                       or bool(previous.episode and screen.episode and previous.episode != screen.episode))
+                       or bool(previous.title and screen.title and previous.title != screen.title))
             if changed:
                 self._record_landscape("request_page_changed", origin={
                     "kind": previous.kind, "title": previous.title, "episode": previous.episode})
@@ -343,12 +385,36 @@ class PlaybackAssistant:
         accepted = self._begin_landscape(screen, now, manual=True)
         return {"ok": accepted, "method": "landscape_prepare"}
 
+    def observe_fullscreen_click(self, now=None):
+        """Observe a click already delivered to WSA; never activate it again."""
+        now = time.monotonic() if now is None else now
+        previous = self.screen
+        self.consume_fullscreen(previous.title)
+        self.fast_until = time.monotonic()+1.2
+        if self.landscape_preparing:
+            return {"ok": True, "method": "fullscreen_observed", "pending": True}
+        self.snapshot_data = self.bridge.snapshot()
+        screen = self.screen = read_screen(self.snapshot_data)
+        origin = screen if screen.kind == "player" and not screen.landscape else previous
+        if origin.title:
+            self.title = self.policy.active = origin.title
+            self.policy.pending, self.policy.preview, self.policy.decided = None, None, True
+        # LandActivity may already be drawn, with no episode label. Do not
+        # write the old snapshot's episode over the user's new selection.
+        self.landscape_origin = (origin.kind, origin.title, origin.episode)
+        self.landscape_manual = self.landscape_observed = True
+        self.landscape_mode = self.manager.settings.window_mode
+        self.landscape_preparing = self.landscape_clicked = True
+        self.stage, self.deadline = "landscape_prepare", now+3
+        self.last_landscape = {"manual": True, "window_mode": self.landscape_mode,
+                               "callback": "native", "input": "app_original_click"}
+        self._record_landscape("native_click_observed")
+        self._advance_landscape(screen, now)
+        return {"ok": True, "method": "fullscreen_observed"}
+
     def _advance_landscape(self, screen, now):
         origin = self.landscape_origin
         settings = self.manager.settings
-        if now > self.deadline:
-            self._finish_landscape(False, "entry_timeout" if self.landscape_clicked else "prepare_timeout")
-            return
         if settings.window_mode != self.landscape_mode:
             self._finish_landscape(False, "window_mode_changed")
             return
@@ -362,9 +428,31 @@ class PlaybackAssistant:
                 left, top, right, bottom = screen.nodes[0]["bounds"]
                 if right-left > bottom-top:
                     self._finish_landscape(True)
+                    return
+            if now > self.deadline:
+                self._finish_landscape(False, "entry_timeout")
+            return
+        if now > self.deadline:
+            reason = ("feed_entry_timeout" if self.landscape_feed_pending else
+                      "entry_timeout" if self.landscape_clicked else "prepare_timeout")
+            self._finish_landscape(False, reason)
             return
         if screen.kind in {"quality", "episodes"}:
             self._finish_landscape(False, "menu_opened")
+            return
+        if self.landscape_feed_pending:
+            if screen.kind in {"feed", "player"} and screen.title and origin[1] and screen.title != origin[1]:
+                self._finish_landscape(False, "page_changed")
+                return
+            if screen.kind == "player" and screen.title and screen.text("全屏观看"):
+                # Preserve the episode that the app actually resumed. No start
+                # rule, quality action or history rewind runs during this route.
+                manual = self.landscape_manual
+                accepted = self._begin_landscape(screen, now, manual=manual)
+                self._record_landscape(self.last_landscape["reason"],
+                                      route="feed_via_player", feed_origin={
+                                          "title": origin[1], "episode": origin[2]},
+                                      accepted=accepted)
             return
         if screen.kind in {"feed", "player"} and origin:
             changed = (screen.kind != origin[0]
@@ -396,7 +484,10 @@ class PlaybackAssistant:
         self.deadline = now+2
         self._record_landscape("fullscreen_click_sending")
         try:
-            clicked = self.click(node, now)
+            # The text node's accessibility-clickable ancestor can accept the
+            # action without opening fullscreen (notably on comic players).
+            # Tap this freshly resolved, visible button on its own display.
+            clicked = self.click(node, now, tap=True)
         except Exception:
             self._finish_landscape(False, "click_error")
             raise
@@ -423,7 +514,11 @@ class PlaybackAssistant:
                 self.deadline = time.monotonic()+15
 
     def click(self, node, now, *, tap=False):
-        if node and self.bridge.click(node, tap=tap):
+        native_fullscreen = (node and node.get("text") == "全屏观看"
+                             and self.landscape_preparing and self.activate_fullscreen)
+        clicked = (self.activate_fullscreen(self.screen, node) if native_fullscreen else
+                   bool(node and self.bridge.click(node, tap=tap)))
+        if clicked:
             # Page recognition gates the next step; no fixed one-second pause.
             self.wait_until = now + .12
             self.fast_until = time.monotonic()+1.2

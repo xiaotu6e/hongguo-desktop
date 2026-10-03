@@ -65,6 +65,7 @@ class UiBridgeTests(TestCase):
             settings=SimpleNamespace(server_port=5038, endpoint="127.0.0.1:58526"),
         )
         self.manager.command.return_value = SimpleNamespace(returncode=0)
+        self.manager.reconnect.return_value = "device"
         self.bridge = UiBridge(self.manager)
         self.jar = patch("desktop_manager.ui_bridge.Path.is_file", return_value=True)
         self.jar.start()

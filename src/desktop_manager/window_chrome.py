@@ -34,6 +34,7 @@ class WindowChrome:
         self._grip = None
         self._fullscreen_target_key = None
         self._fullscreen_target_sent_at = 0.0
+        self._fullscreen_presentation_key = None
         self._lifecycle_lock = threading.RLock()
         self.kernel = ctypes.WinDLL("kernel32", use_last_error=True)
         self.kernel.CreateEventW.argtypes = [ctypes.c_void_p, wt.BOOL, wt.BOOL, wt.LPCWSTR]
@@ -114,7 +115,8 @@ class WindowChrome:
         if not handle:
             return status
         for selector, key in enumerate(("flags", "heartbeat_ms", "hook_generation", "hook_calls",
-                                        "queued_wheels", "hook_error")):
+                                        "queued_wheels", "hook_error", "fullscreen_presses",
+                                        "fullscreen_queued", "fullscreen_focus_ok")):
             result = ctypes.c_size_t()
             if not self.window.user.SendMessageTimeoutW(handle, 0x8019, selector, 0, 2, 100,
                                                        ctypes.byref(result)):
@@ -135,7 +137,7 @@ class WindowChrome:
                 return packet & 65535, (packet >> 16) & 65535, -120 if packet >> 32 == 1 else 120
         return None
 
-    def set_fullscreen_target(self, rect=None):
+    def set_fullscreen_target(self, rect=None, *, passthrough=False):
         """Refresh only the observed Fullscreen button, never the whole player."""
         if rect is not None:
             if (len(rect) != 4 or any(type(value) is not int or not 0 <= value <= 65535 for value in rect)
@@ -143,12 +145,13 @@ class WindowChrome:
                 raise ValueError("无效的全屏按钮范围")
         else:
             rect = (0, 0, 0, 0)
+            passthrough = False
         handle = self.grip()
         if not handle:
             self._fullscreen_target_key = None
             return False
         rect = tuple(rect)
-        key = (handle, self.hwnd, self.process.pid if self.process else None, rect)
+        key = (handle, self.hwnd, self.process.pid if self.process else None, rect, bool(passthrough))
         now = time.monotonic()
         # A cleared target has no lease. Keep an observed button refreshed
         # well within native's 3s TTL, including the slower player observer.
@@ -157,7 +160,7 @@ class WindowChrome:
             return True
         result = ctypes.c_size_t()
         sent = bool(self.window.user.SendMessageTimeoutW(
-            handle, 0x801a, rect[0] | (rect[1] << 16), rect[2] | (rect[3] << 16),
+            handle, 0x801a, rect[0] | (rect[1] << 16) | (int(bool(passthrough)) << 32), rect[2] | (rect[3] << 16),
             2, 100, ctypes.byref(result)))
         if sent:
             self._fullscreen_target_key = key
@@ -165,11 +168,42 @@ class WindowChrome:
         return sent
 
     def take_fullscreen(self):
-        """Consume one fresh, completed click intercepted on that button."""
+        """Distinguish an intercepted pair from the app's original click."""
         handle = self.grip()
         result = ctypes.c_size_t()
-        return bool(handle and self.window.user.SendMessageTimeoutW(handle, 0x801b, 0, 0, 2, 100,
+        if handle and self.window.user.SendMessageTimeoutW(handle, 0x801b, 0, 0, 2, 100, ctypes.byref(result)):
+            if result.value == 2:
+                return "observed"
+            return result.value == 1
+        return False
+
+    def take_page_change(self):
+        """Read a recent click hint; never consume or replay the app's click."""
+        handle = self.grip()
+        result = ctypes.c_size_t()
+        return bool(handle and self.window.user.SendMessageTimeoutW(handle, 0x801f, 0, 0, 2, 100,
                                                                    ctypes.byref(result)) and result.value == 1)
+
+    def set_fullscreen_presentation(self, mask=None):
+        """Draw the relocated feed control without covering the app's series tag."""
+        rect = (0, 0, 0, 0) if mask is None else tuple(mask)
+        if (len(rect) != 4 or any(type(v) is not int or not 0 <= v <= 65535 for v in rect)
+                or (mask is not None and (rect[2] <= rect[0] or rect[3] <= rect[1]))):
+            raise ValueError("无效的推荐页按钮显示范围")
+        handle = self.grip()
+        key = (handle, self.process.pid if self.process else None, rect)
+        if not handle:
+            self._fullscreen_presentation_key = None
+            return False
+        if key == getattr(self, "_fullscreen_presentation_key", None):
+            return True
+        result = ctypes.c_size_t()
+        sent = bool(self.window.user.SendMessageTimeoutW(handle, 0x801d,
+                    rect[0] | (rect[1] << 16), rect[2] | (rect[3] << 16),
+                    2, 100, ctypes.byref(result)))
+        if sent:
+            self._fullscreen_presentation_key = key
+        return sent
 
     def wait_input(self, enabled=True, timeout_ms=200):
         # The lease must stay refreshed while the caller awaits an Android

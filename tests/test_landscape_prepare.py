@@ -66,6 +66,7 @@ class LandscapePreparationTests(TestCase):
         self.helper.bridge.snapshot.return_value = newest
         self.helper.tick(5.41)
         self.assertIs(self.helper.bridge.click.call_args.args[0], newest["nodes"][-1])
+        self.assertTrue(self.helper.bridge.click.call_args.kwargs["tap"])
         self.assertTrue(self.helper.landscape_preparing)
         self.helper.tick(5.6)
         self.helper.bridge.click.assert_called_once()
@@ -94,15 +95,31 @@ class LandscapePreparationTests(TestCase):
         self.helper.tick(4)
         self.helper.bridge.click.assert_not_called()
         self.assertTrue(self.helper.request_landscape(now=5)["ok"])
-        self.ready_and_click("feed")
+        self.prepare.assert_not_called()
+        self.helper.bridge.click.assert_called_once()
+        # Feed removes the button in a wide layout. Wait for the real series
+        # player before preparing geometry and activating its Fullscreen.
+        pending = snapshot("feed", 1600, 900)
+        pending["nodes"].pop()
+        self.helper.bridge.snapshot.return_value = pending
+        self.helper.tick(5.4)
+        self.assertTrue(self.helper.landscape_preparing)
+        self.helper.bridge.click.assert_called_once()
         self.assertFalse(self.helper.history.items)
+        self.helper.bridge.snapshot.return_value = snapshot("player")
+        self.helper.tick(5.5)
+        self.prepare.assert_called_once()
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900)
+        self.helper.tick(5.6)
+        self.helper.tick(5.95)
+        self.assertEqual(self.helper.bridge.click.call_count, 2)
         self.helper.bridge.snapshot.return_value = snapshot("land", 1600, 900)
-        self.helper.tick(5.7)
+        self.helper.tick(6)
         self.assertEqual(self.helper.policy.active, "测试剧")
         self.assertTrue(self.helper.policy.decided)
 
-    def test_changed_title_or_episode_rejects_stale_native_intent_before_resizing(self):
-        for title, episode in [("另一部剧", 3), ("测试剧", 4)]:
+    def test_changed_title_rejects_stale_native_intent_before_resizing(self):
+        for title, episode in [("另一部剧", 3)]:
             with self.subTest(title=title, episode=episode):
                 self.source("feed")
                 self.helper.bridge.snapshot.return_value = snapshot("feed", title=title, episode=episode)
@@ -110,10 +127,22 @@ class LandscapePreparationTests(TestCase):
                 self.prepare.assert_not_called()
                 self.helper.bridge.click.assert_not_called()
 
+    def test_same_player_newly_selected_episode_accepts_click_and_keeps_that_episode(self):
+        self.source("player")
+        self.helper.bridge.snapshot.return_value = snapshot("player",episode=7)
+        self.prepare.return_value = "cached"
+        self.assertTrue(self.helper.request_landscape(now=5)["ok"])
+        self.assertEqual(self.helper.landscape_origin,("player","测试剧",7))
+        self.assertEqual(self.helper.history.items["测试剧"]["episode"],7)
+        self.assertTrue(self.helper.policy.decided)
+        self.helper.bridge.click.assert_called_once()
+        self.helper.tick(5.1)
+        self.helper.bridge.click.assert_called_once()
+
     def test_navigation_during_preparation_cancels_without_late_click(self):
-        self.source("feed")
+        self.source()
         self.helper.request_landscape(now=5)
-        self.helper.bridge.snapshot.return_value = snapshot("feed", 1600, 900, title="另一部剧")
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900, title="另一部剧")
         self.helper.tick(5.5)
         self.helper.tick(6)
         self.assertFalse(self.helper.landscape_preparing)
@@ -143,7 +172,7 @@ class LandscapePreparationTests(TestCase):
         self.assertTrue(self.helper.last_landscape["clicked"])
 
     def test_preparation_deadline_does_not_resize_or_click_forever(self):
-        self.source("feed")
+        self.source()
         self.helper.request_landscape(now=5)
         self.helper.tick(9.1)
         self.helper.tick(10)
@@ -152,11 +181,11 @@ class LandscapePreparationTests(TestCase):
         self.helper.bridge.click.assert_not_called()
 
     def test_reset_and_explicit_wheel_cancellation_remove_pending_request(self):
-        self.source("feed")
+        self.source()
         self.helper.request_landscape(now=5)
         self.helper.cancel_landscape()
         self.assertFalse(self.helper.landscape_preparing)
-        self.source("feed")
+        self.source()
         self.helper.request_landscape(now=6)
         self.helper.reset()
         self.assertFalse(self.helper.landscape_preparing)
@@ -164,7 +193,7 @@ class LandscapePreparationTests(TestCase):
         self.helper.bridge.click.assert_not_called()
 
     def test_failed_prepare_callback_cannot_leave_a_request_for_later_replay(self):
-        self.source("feed")
+        self.source()
         self.prepare.side_effect = OSError("window unavailable")
         with self.assertRaises(OSError):
             self.helper.request_landscape(now=5)
@@ -173,9 +202,9 @@ class LandscapePreparationTests(TestCase):
         self.helper.bridge.click.assert_not_called()
 
     def test_lost_fullscreen_reply_does_not_send_another_fullscreen_action(self):
-        self.source("feed")
+        self.source()
         self.helper.request_landscape(now=5)
-        self.helper.bridge.snapshot.return_value = snapshot("feed", 1600, 900)
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900)
         self.helper.tick(5.1)
         self.helper.bridge.click.side_effect = OSError("response lost")
         with self.assertRaises(OSError):
@@ -185,14 +214,15 @@ class LandscapePreparationTests(TestCase):
         self.assertFalse(self.helper.landscape_preparing)
 
     def test_cached_route_uses_a_fresh_node_without_waiting_for_a_wide_source_root(self):
-        self.source("feed")
+        self.source()
         self.prepare.return_value = "cached"
-        self.helper.request_landscape(now=5)
-        self.helper.bridge.click.assert_not_called()
-        newest = snapshot("feed", shift=15)
+        newest = snapshot("player", shift=15)
         self.helper.bridge.snapshot.return_value = newest
-        self.helper.tick(5.1)
+        self.helper.request_landscape(now=5)
+        self.helper.bridge.click.assert_called_once()
         self.assertIs(self.helper.bridge.click.call_args.args[0], newest["nodes"][-1])
+        self.helper.tick(5.1)
+        self.helper.bridge.click.assert_called_once()
         self.helper.bridge.snapshot.return_value = snapshot("land", 692, 1230)
         self.helper.tick(5.2)
         self.assertTrue(self.helper.landscape_preparing)
@@ -202,13 +232,135 @@ class LandscapePreparationTests(TestCase):
         self.assertEqual(self.helper.last_landscape["reason"], "landscape_entered")
         self.helper.bridge.click.assert_called_once()
 
-    def test_cached_route_still_cancels_a_changed_page_before_clicking(self):
-        self.source("feed")
+    def test_cached_route_stops_after_page_change_without_replaying_click(self):
+        self.source()
         self.prepare.return_value = "cached"
         self.helper.request_landscape(now=5)
-        self.helper.bridge.snapshot.return_value = snapshot("feed", title="另一部剧")
+        self.helper.bridge.click.assert_called_once()
+        self.helper.bridge.snapshot.return_value = snapshot("player", title="另一部剧")
         self.helper.tick(5.1)
         self.assertFalse(self.helper.landscape_preparing)
+        self.assertEqual(self.helper.last_landscape["reason"], "page_changed")
+        self.helper.bridge.click.assert_called_once()
+
+    def test_actual_wide_fullscreen_confirmation_wins_over_expired_deadline(self):
+        self.source()
+        self.prepare.return_value = "cached"
+        self.helper.request_landscape(now=5)
+        self.helper.bridge.snapshot.return_value = snapshot("land", 1600, 900)
+        self.helper.tick(8)
+        self.assertTrue(self.helper.last_landscape["ok"])
+        self.assertEqual(self.helper.last_landscape["reason"], "landscape_entered")
+        self.helper.bridge.click.assert_called_once()
+
+    def test_feed_entry_preserves_actual_resumed_episode_then_prepares_the_player(self):
+        original = self.source("feed")
+        self.assertTrue(self.helper.request_landscape(now=5)["ok"])
+        self.helper.bridge.click.assert_called_once_with(original["nodes"][1], tap=False)
+        self.prepare.assert_not_called()
+        self.helper.bridge.snapshot.return_value = snapshot("player", episode=8)
+        self.helper.tick(5.2)
+        self.prepare.assert_called_once()
+        self.assertTrue(self.helper.landscape_preparing)
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900, episode=8)
+        self.helper.tick(5.3)
+        self.helper.tick(5.65)
+        self.helper.bridge.snapshot.return_value = snapshot("land", 615, 346)
+        self.helper.tick(5.7)
+        self.assertEqual(self.helper.last_landscape["reason"], "landscape_entered")
+        self.assertFalse(self.helper.landscape_preparing)
+        self.assertEqual(self.helper.last_landscape["origin"]["episode"], 8)
+        self.assertEqual(self.helper.last_landscape["feed_origin"]["episode"], 3)
+        self.helper.tick(20)
+        self.assertEqual(self.helper.bridge.click.call_count, 2)
+
+    def test_feed_timeout_does_not_replay_the_action_or_prepare_an_empty_button(self):
+        self.source("feed")
+        self.helper.request_landscape(now=5)
+        self.helper.tick(9.1)
+        self.helper.tick(10)
+        self.assertEqual(self.helper.last_landscape["reason"], "feed_entry_timeout")
+        self.assertFalse(self.helper.landscape_preparing)
+        self.prepare.assert_not_called()
+        self.helper.bridge.click.assert_called_once()
+
+    def test_feed_click_rejection_and_lost_reply_do_not_leave_pending_navigation(self):
+        for failure in (False, OSError("response lost")):
+            with self.subTest(failure=failure):
+                self.helper.reset()
+                self.helper.bridge.click.reset_mock()
+                self.source("feed")
+                if isinstance(failure, Exception):
+                    self.helper.bridge.click.side_effect = failure
+                    with self.assertRaises(OSError):
+                        self.helper.request_landscape(now=5)
+                else:
+                    self.helper.bridge.click.side_effect = None
+                    self.helper.bridge.click.return_value = False
+                    self.assertFalse(self.helper.request_landscape(now=5)["ok"])
+                self.assertFalse(self.helper.landscape_preparing)
+                self.helper.tick(10)
+                self.prepare.assert_not_called()
+                self.helper.bridge.click.assert_called_once()
+
+    def test_feed_navigation_to_a_different_series_cancels_before_geometry_or_fullscreen(self):
+        self.source("feed")
+        self.helper.request_landscape(now=5)
+        self.helper.bridge.snapshot.return_value = snapshot("player", title="另一部剧")
+        self.helper.tick(5.5)
+        self.helper.tick(6)
+        self.assertFalse(self.helper.landscape_preparing)
+        self.prepare.assert_not_called()
+        self.helper.bridge.click.assert_called_once()
+
+    def test_exiting_fullscreen_to_feed_does_not_auto_enter_but_manual_entry_remains_available(self):
+        self.source("feed")
+        self.helper.request_landscape(now=5)
+        self.helper.bridge.snapshot.return_value = snapshot("player")
+        self.helper.tick(5.2)
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900)
+        self.helper.tick(5.3)
+        self.helper.tick(5.7)
+        self.helper.bridge.snapshot.return_value = snapshot("land", 1600, 900)
+        self.helper.tick(5.8)
+        self.helper.bridge.snapshot.return_value = snapshot("feed")
+        self.helper.tick(6)
+        self.helper.tick(9)
+        self.assertEqual(self.helper.bridge.click.call_count, 2)
+        self.assertTrue(self.helper.request_landscape(now=10)["ok"])
+        self.assertEqual(self.helper.bridge.click.call_count, 3)
+
+    def test_manual_feed_fullscreen_timeout_does_not_trigger_smart_start_rewind(self):
+        self.helper.manager.settings.start_rule = "smart"
+        self.helper.manager.settings.auto_fullscreen = False
+        self.helper.last_settings = self.helper.preferences()
+        self.source("feed")
+        self.helper.tick(4)
+        self.helper.request_landscape(now=5)
+        self.helper.bridge.snapshot.return_value = snapshot("player")
+        self.helper.tick(5.2)
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900)
+        self.helper.tick(5.3)
+        self.helper.tick(5.7)
+        self.assertTrue(self.helper.bridge.click.call_args.kwargs["tap"])
+        self.helper.tick(8)
+        self.assertEqual(self.helper.last_landscape["reason"], "entry_timeout")
+        self.helper.bridge.snapshot.return_value = snapshot("player")
+        self.helper.tick(9)
+        self.helper.tick(11)
+        self.assertEqual(self.helper.bridge.click.call_count, 2)
+        self.assertEqual(self.helper.history.items["测试剧"]["episode"], 3)
+        self.assertTrue(self.helper.policy.decided)
+
+    def test_native_fullscreen_uses_the_fresh_button_without_an_android_click(self):
+        activate = self.helper.activate_fullscreen = Mock(return_value=True)
+        self.source()
+        self.helper.request_landscape(now=5)
+        self.helper.bridge.snapshot.return_value = snapshot("player", 1600, 900)
+        self.helper.tick(5.1)
+        self.helper.tick(5.41)
+        activate.assert_called_once()
+        self.assertIs(activate.call_args.args[1], self.helper.screen.nodes[-1])
         self.helper.bridge.click.assert_not_called()
 
 
@@ -229,6 +381,48 @@ class WindowPreparationTests(TestCase):
         app.window_chrome.begin_geometry_change.return_value = True
         app.last_window_layout = None
         return app
+
+    def test_stale_fullscreen_button_never_sends_a_native_click(self):
+        app = self.app()
+        app.playback.bridge = Mock()
+        app.playback.bridge.node_action.return_value = False
+        screen = read_screen(snapshot())
+        self.assertFalse(app.activate_fullscreen_control(screen, screen.nodes[-1]))
+        app.player_window.tap_control.assert_not_called()
+
+    def test_valid_fullscreen_passes_the_same_root_and_button_to_native_mapping(self):
+        app = self.app()
+        app.playback.bridge = Mock()
+        app.playback.bridge.node_action.return_value = True
+        app.player_window.tap_control.return_value = True
+        screen = read_screen(snapshot())
+        self.assertTrue(app.activate_fullscreen_control(screen, screen.nodes[-1]))
+        app.playback.bridge.node_action.assert_called_once_with("validate", screen.nodes[-1])
+        app.player_window.tap_control.assert_called_once_with(123, screen.nodes[0]["bounds"], screen.nodes[-1]["bounds"], defer_restore=True)
+
+    def test_cached_native_activation_fits_after_click_without_waiting_for_android_geometry(self):
+        app = self.app()
+        app.playback.landscape_cached = True
+        app.playback.bridge = Mock()
+        app.playback.bridge.node_action.return_value = True
+        app.player_window.tap_control.return_value = True
+        order = Mock()
+        order.attach_mock(app.player_window.tap_control, "click")
+        order.attach_mock(app.player_window.resize, "resize")
+        screen = read_screen(snapshot())
+        self.assertTrue(app.activate_fullscreen_control(screen, screen.nodes[-1]))
+        self.assertEqual([call[0] for call in order.mock_calls], ["click", "resize"])
+        self.assertEqual(app.last_window_layout, (123, "auto", True))
+
+    def test_cached_native_rejected_click_never_widens_window(self):
+        app = self.app()
+        app.playback.landscape_cached = True
+        app.playback.bridge = Mock()
+        app.playback.bridge.node_action.return_value = True
+        app.player_window.tap_control.return_value = False
+        screen = read_screen(snapshot())
+        self.assertFalse(app.activate_fullscreen_control(screen, screen.nodes[-1]))
+        app.player_window.resize.assert_not_called()
 
     def test_prepared_landscape_is_not_shrunk_back_using_old_portrait_snapshot(self):
         app = self.app()

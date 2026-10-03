@@ -7,9 +7,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare-source.ps1
 .\.venv\Scripts\python.exe .\src\main.py
 ```
 
-源码主入口为 `src/main.py`，资产位于 `src/assets`。页面读取 Java 组件和窗口 C++ 组件的预编译成品随源码提供，也可以重新构建。
+源码主入口为 `src/main.py`，资产位于 `src/assets`。页面读取 Java 组件、窗口 C++ 组件和独立守护程序的预编译成品随源码提供，也可以重新构建。
 
 安装脚本使用 requirements.lock.txt 锁定本次 Windows Python 3.11 环境的完整 Python 依赖版本；requirements.txt 列出直接依赖。升级依赖后重新验证并生成锁定文件。
+
+源码入口用于开发调试，不启用成品守护；日常使用建议安装 Windows 成品。
 
 ## 测试
 
@@ -27,7 +29,7 @@ Java 离线测试读取 `JAVA_HOME` 或 PATH 中的 javac。未安装 JDK 时会
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1
 ```
 
-依次准备环境、运行单元测试、编译 C++/Java 组件、执行 Flet Windows 构建，最后生成 `dist` 下的 ZIP、SHA256SUMS.txt 和 release.json。
+依次准备环境、运行单元测试、编译窗口、守护和 Java 组件、执行 Flet Windows 构建，最后生成 `dist` 下的 ZIP、SHA256SUMS.txt 和 release.json。
 
 仅测试和准备、不编译成品：
 
@@ -38,7 +40,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Prepare
 为已有成品制作发布包：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package-release.ps1 -AppDirectory 'C:\path\to\app' -Version v0.1.2
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package-release.ps1 -AppDirectory 'C:\path\to\app' -Version v0.1.8
 ```
 
 打包 ZIP 时间戳会影响哈希，因此每次打包后的 `manifests/release.json` 必须与上传的 ZIP 对应。不要用一次构建的清单校验另一次构建的 ZIP。
@@ -63,10 +65,10 @@ gh repo create hongguo-desktop --public --source . --remote origin --push
 
 ```powershell
 git add manifests/release.json
-git commit -m "Record v0.1.2 release checksum"
-git tag v0.1.2
-git push origin main v0.1.2
-gh release create v0.1.2 .\dist\hongguo-desktop-v0.1.2-windows-x64.zip .\dist\SHA256SUMS.txt .\dist\release.json --title "红果桌面助手 v0.1.2" --notes-file .\docs\release-notes.md
+git commit -m "Record v0.1.8 release checksum"
+git tag v0.1.8
+git push origin main v0.1.8
+gh release create v0.1.8 .\dist\hongguo-desktop-v0.1.8-windows-x64.zip .\dist\SHA256SUMS.txt .\dist\release.json --title "红果桌面助手 v0.1.8" --notes-file .\docs\release-notes.md
 ```
 
 附带 GitHub Actions CI，运行离线测试和 PowerShell 解析检查。发布成品先人工核对版本、实际播放与第三方 NOTICE。更新发行版时同时更新对应校验清单和兼容性文档。
@@ -76,3 +78,5 @@ gh release create v0.1.2 .\dist\hongguo-desktop-v0.1.2-windows-x64.zip .\dist\SH
 每次修改同步 `CHANGELOG.md`，让用户看懂具体行为变化和需要更新的地方。程序版本更新同时维护 `manifests/updates.json`，记录助手、设置、WSA、APK、Java / C++ 组件及依赖是否需要处理；`scripts/update-plan.ps1` 会对当前版本到目标版本的变化生成只读计划供 Agent 报告。
 
 文档或 Agent 脚本修改单独记录日期，不更改未重新构建的助手成品版本。已发布标签、ZIP 和校验值不重写；新的程序版本使用新标签、新成品与匹配清单。执行流程见 [更新操作说明](updating.md)。
+
+发布说明只列最终主要功能与更新方式；中间版本的排查过程留在本地。

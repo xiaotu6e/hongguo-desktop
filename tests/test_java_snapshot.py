@@ -1,7 +1,6 @@
 """Exercise bridge root selection in a JVM with fake nodes, never Android/ADB."""
 import json
 import os
-import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -9,8 +8,7 @@ from unittest import SkipTest, TestCase
 
 
 PROJECT = Path(__file__).resolve().parents[1]
-JAVA_HOME = os.environ.get("JAVA_DIRECTORY") or os.environ.get("JAVA_HOME")
-JAVA = Path(JAVA_HOME) / "bin" if JAVA_HOME else Path(shutil.which("javac") or ".").parent
+JAVA = Path(os.environ.get("JAVA_DIRECTORY", r"E:\tools\jdk-21.0.12.1+1")) / "bin"
 
 RECT = """package android.graphics;
 public class Rect { public int left, top, right, bottom; public Rect() {} }
@@ -55,7 +53,14 @@ public class SnapshotHarness {
     }
     public static class Ui {
         final List<Window> windows=new ArrayList<>();
+        List<Window> changed=null;
+        int cacheClears=0;
         Ui(Node... nodes) { for(Node node:nodes) windows.add(new Window(node)); }
+        public boolean clearCache() {
+            cacheClears++;
+            if(changed!=null) { windows.clear();windows.addAll(changed);changed=null; }
+            return true;
+        }
         public List<Window> getWindows() { return windows; }
         public Node getRootInActiveWindow() { return null; }
     }
@@ -85,6 +90,16 @@ public class SnapshotHarness {
         try { HongguoUi.snapshot(); } catch(Exception expected) { failed=true; }
         System.out.println("{\"failed\":"+failed+",\"remainingReads\":"+remaining.reads+
             ",\"rootRecycles\":["+bad.recycled+","+remaining.recycled+"]}");
+
+        Node stale=new Node("portrait",true), rotated=new Node("landscape",true);
+        Ui changing=new Ui(stale);
+        changing.changed=Arrays.asList(new Window(rotated));
+        HongguoUi.ui=changing;
+        System.out.println(HongguoUi.snapshot());
+        changing.changed=Arrays.asList(new Window(stale));
+        System.out.println(HongguoUi.click(new String[]{"validate","0",encode(rotated.getViewIdResourceName()),
+            encode(rotated.name),"[0,0,100,200]"}));
+        System.out.println("{\"cacheClears\":"+changing.cacheClears+",\"clicks\":"+(stale.clicks+rotated.clicks)+"}");
     }
 }
 """
@@ -139,3 +154,11 @@ class JavaSnapshotTests(TestCase):
         self.assertTrue(state["failed"])
         self.assertEqual(state["remainingReads"], 0)
         self.assertEqual(state["rootRecycles"], [1, 1])
+
+    def test_rotated_window_refreshes_cache_and_validation_rejects_old_target(self):
+        snapshot, action, state = self.results[6:9]
+        self.assertEqual(snapshot["nodes"][0]["text"], "landscape")
+        self.assertFalse(action["ok"])
+        self.assertEqual(action["reason"], "stale")
+        self.assertEqual(state["cacheClears"], 2)
+        self.assertEqual(state["clicks"], 0)

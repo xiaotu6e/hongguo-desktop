@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import atexit
+import json
 import logging
 import os
 import queue
@@ -22,6 +23,7 @@ from desktop_manager.window_chrome import WindowChrome
 from desktop_manager.window_input import WindowInput
 from desktop_manager.runtime_diagnostics import RuntimeDiagnostics, process_state
 from desktop_manager.single_instance import SingleInstance
+from desktop_manager.guardian import GuardianLink
 
 BG = "#11151C"
 PANEL = "#1B222C"
@@ -53,25 +55,32 @@ class DesktopApp:
         self.events: queue.Queue[str] = queue.Queue()
         self.manager = AndroidManager(self.settings, self.events.put)
         self.playback = PlaybackAssistant(self.manager, self.events.put,
-                                          prepare_landscape=self.prepare_landscape_window)
+                                          prepare_landscape=self.prepare_landscape_window,
+                                          activate_fullscreen=self.activate_fullscreen_control)
         atexit.register(self.playback.close)
         self.player_window = WsaPlayerWindow()
         self.window_chrome = WindowChrome(self.player_window)
         atexit.register(self.window_chrome.close)
-        self.window_input = WindowInput(self.playback, self.window_chrome)
+        self.window_input = WindowInput(self.playback, self.window_chrome, self.native_player_fullscreen_ready)
         self.chrome_retry_after = 0.0
+        self.last_splash_check = 0.0
         self.last_window_layout = None
         self.last_landscape_window = None
         self.landscape_initialized = None
+        self.landscape_checked_at = 0.0
         self.landscape_candidate = None
         self.pending_window_layout = None
         self.performance = {}
         self.lock = asyncio.Lock()
+        self.player_observe_event = asyncio.Event()
         self.busy = False
         self.connected = False
+        self.connection_recovering = False
         self.wsa_found = False
         self.view = "home"
         self.apps: list[dict] = []
+        self.apps_loading = False
+        self.apps_refresh_task = None
         self.history: list[str] = []
         self.error_text = ""
         self.stopping = False
@@ -90,7 +99,25 @@ class DesktopApp:
             self.log.addHandler(handler)
             self.log.setLevel(logging.INFO)
         self.runtime = RuntimeDiagnostics(data_directory(), self.log, self.events.put)
+        self.guardian = GuardianLink(self.log)
+        self.restore_recovery_layout()
+        atexit.register(self.guardian.close)
         self.runtime.install_exception_hooks(asyncio.get_running_loop())
+
+    def restore_recovery_layout(self):
+        if not self.guardian.recovery:
+            return
+        try:
+            previous = json.loads((data_directory() / "last-unexpected-exit.json").read_text(encoding="utf-8"))
+            cache = previous.get("landscape_cache")
+            hwnd = self.player_window.find()
+            if isinstance(cache, list) and len(cache) == 2 and cache[0] == hwnd and cache[1]:
+                self.landscape_initialized = (hwnd, str(cache[1]))
+                self.landscape_checked_at = 0.0  # Validate the live Android PID on the first observer tick.
+                self.last_window_layout = (hwnd, self.settings.window_mode,
+                                           bool(previous.get("screen", {}).get("landscape")))
+        except (OSError, ValueError, TypeError, AttributeError):
+            self.log.warning("恢复前的窗口状态无法读取，将按当前播放页面重新检测。")
 
     def text(self, value: str, size: int = 14, color: str = "#ECF1F7", **kwargs):
         return ft.Text(value, size=size, color=color, **kwargs)
@@ -119,6 +146,8 @@ class DesktopApp:
         page.window.visible = True
         page.window.skip_task_bar = False
         page.window.prevent_close = True
+        if self.guardian.recovery:
+            page.window.minimized = True
         page.window.on_event = self.on_window_event
         page.on_error = self.on_page_error
         page.on_disconnect = self.on_page_disconnect
@@ -138,6 +167,7 @@ class DesktopApp:
             ft.Row([self.status_dot, self.status], spacing=8),
             self.text("Windows Android 子系统 · WSA", 11, MUTED),
             self.text("关闭窗口会最小化，播放辅助继续运行", 10, MUTED),
+            self.text("退出工具会同时关闭红果播放窗口", 10, MUTED),
             ft.TextButton("退出工具", icon=ft.Icons.EXIT_TO_APP_ROUNDED,
                           on_click=self.exit_tool, style=ft.ButtonStyle(color=MUTED)),
         ], spacing=10, expand=True))
@@ -180,16 +210,29 @@ class DesktopApp:
 
     async def on_keyboard_event(self, event):
         if event.ctrl and event.shift and event.key.lower() == "q":
-            await self.exit_tool(event)
+            await self.exit_tool(event, source="keyboard")
 
-    async def exit_tool(self, _=None):
+    async def exit_tool(self, _=None, *, source="button"):
         if self.stopping:
             return
         self.stopping = True
-        await asyncio.to_thread(self.clear_window_input_targets)
-        self.runtime.lifecycle("exiting", "用户选择退出工具")
+        reason = "快捷键退出工具 (Ctrl+Shift+Q)" if source == "keyboard" else "点击退出工具"
+        self.runtime.update(exit_requested=True, exit_source=source)
+        self.runtime.lifecycle("exiting", reason)
+        if getattr(self, "guardian", None):
+            self.guardian.request_stop()
+        if getattr(self, "player_observe_event", None):
+            self.player_observe_event.set()
+        if getattr(self, "apps_refresh_task", None):
+            self.apps_refresh_task.cancel()
+        try:
+            await asyncio.to_thread(self.clear_window_input_targets)
+        except Exception as error:
+            self.runtime.error("停止输入", error, exc_info=True)
         async with self.lock:
-            for name, cleanup in [("窗口辅助退出", self.window_chrome.close),
+            for name, cleanup in [("鼠标恢复", self.player_window.finish_tap_control),
+                                  ("关闭红果播放窗口", self.window_chrome.close_player),
+                                  ("窗口辅助退出", self.window_chrome.close),
                                   ("播放辅助退出", self.playback.close)]:
                 try:
                     await asyncio.to_thread(cleanup)
@@ -231,8 +274,9 @@ class DesktopApp:
         builders = {"home": self.home, "apps": self.apps_view, "settings": self.settings_view, "activity": self.activity_view}
         self.content.content = builders[self.view]()
         self.progress.visible = self.busy
-        self.status.value = "Android 已连接" if self.connected else "环境就绪 · 待启动" if self.wsa_found else "正在检测运行环境"
-        self.status_dot.bgcolor = GREEN if self.connected else ACCENT
+        recovering = getattr(self, "connection_recovering", False)
+        self.status.value = "播放辅助 · 正在恢复连接" if recovering else "Android 已连接" if self.connected else "环境就绪 · 待启动" if self.wsa_found else "正在检测运行环境"
+        self.status_dot.bgcolor = GREEN if self.connected and not recovering else ACCENT
         self.page.update()
 
     def heading(self, title, subtitle):
@@ -307,7 +351,9 @@ class DesktopApp:
                 ft.Row([self.button("打开", launch, ft.Icons.PLAY_ARROW, primary=True), self.button("关闭", stop),
                         self.button("设为默认", favorite), self.button("卸载", uninstall)], wrap=True),
             ]))
-        if not rows:
+        if not rows and self.apps_loading:
+            rows = [self.card([self.text("正在读取应用列表…", 18)])]
+        elif not rows:
             rows = [self.card([ft.Icon(ft.Icons.APPS_ROUNDED, size=38, color=MUTED), self.text("暂时没有读取到应用", 18),
                                self.text("先连接 Android，或在首页拖入 APK 安装。", 13, MUTED),
                                self.button("连接并刷新", self.connect, ft.Icons.REFRESH_ROUNDED)])]
@@ -529,6 +575,7 @@ class DesktopApp:
         pid = visible_app_pid(pid_result.stdout) if not pid_result.returncode else None
         state["app_pid"] = pid
         candidate = (hwnd, pid) if pid else None
+        self.landscape_checked_at = time.monotonic()
         self.landscape_candidate = candidate
         if candidate and candidate == getattr(self, "landscape_initialized", None):
             state["reason"] = "cached"
@@ -555,6 +602,52 @@ class DesktopApp:
             return True
         return False
 
+    def native_player_fullscreen_ready(self):
+        key = getattr(self, "landscape_initialized", None)
+        return bool(isinstance(key, tuple) and key[0] == self.window_chrome.hwnd
+                    and time.monotonic()-getattr(self, "landscape_checked_at", 0) < 6)
+
+    def refresh_landscape_process(self, hwnd):
+        """Expire initialized geometry when the Android process changes."""
+        key = getattr(self, "landscape_initialized", None)
+        if not isinstance(key, tuple):
+            return
+        if key[0] != hwnd:
+            self.landscape_initialized = None
+            return
+        now = time.monotonic()
+        if now-getattr(self, "landscape_checked_at", 0) < 5:
+            return
+        result = self.manager.command("shell", "pidof", HONGGUO, timeout=3)
+        self.landscape_checked_at = time.monotonic()
+        if result.returncode or key[1] not in result.stdout.split():
+            self.landscape_initialized = None
+
+    def activate_fullscreen_control(self, screen, node):
+        self.last_fullscreen_activation = {"reason": "checking"}
+        if self.stopping or self.busy or not screen.nodes:
+            self.last_fullscreen_activation["reason"] = "stopping_busy_or_no_root"
+            return False
+        hwnd = self.player_window.find()
+        if not hwnd:
+            self.last_fullscreen_activation["reason"] = "no_native_window"
+            return False
+        if not self.playback.bridge.node_action("validate", node):
+            self.last_fullscreen_activation["reason"] = "node_changed"
+            return False
+        clicked = self.player_window.tap_control(hwnd, screen.nodes[0]["bounds"], node["bounds"], defer_restore=True)
+        self.last_fullscreen_activation["reason"] = "sent" if clicked else "pointer_focus_or_window_changed"
+        if (clicked and getattr(self.playback, "landscape_cached", False) is True
+                and self.settings.window_mode != "portrait" and not self.player_window.user.IsZoomed(hwnd)):
+            # A checked fullscreen action already owns this transition. Fit a
+            # previously initialized window immediately after releasing the
+            # button, instead of leaving the rotated surface in a tall window
+            # until Android publishes its new accessibility geometry.
+            left, top, right, bottom = screen.nodes[0]["bounds"]
+            if self.player_window.resize(hwnd, PlayerLayout(True, right-left, bottom-top), True):
+                self.last_window_layout = (hwnd, self.settings.window_mode, True)
+        return clicked
+
     def clear_window_input_targets(self):
         window_input = getattr(self, "window_input", None)
         clear = getattr(window_input, "clear_targets", None)
@@ -573,6 +666,7 @@ class DesktopApp:
     def finish_window_geometry(self):
         if self.stopping or self.playback.landscape_preparing:
             return
+        self.player_window.finish_tap_control()
         candidate = getattr(self, "landscape_candidate", None)
         result = getattr(self.playback, "last_landscape", None) or {}
         screen = getattr(self.playback, "screen", None)
@@ -584,21 +678,50 @@ class DesktopApp:
         if getattr(self.window_chrome, "geometry_holding", False) is True:
             self.window_chrome.end_geometry_change(self.settings.hide_titlebar)
 
+    async def wait_player_observer(self, interval):
+        event = getattr(self, "player_observe_event", None)
+        if event is None:
+            await asyncio.sleep(interval)
+            return
+        try:
+            await asyncio.wait_for(event.wait(), timeout=interval)
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            event.clear()
+
+    def notify_player_change(self):
+        self.playback.fast_until = max(getattr(self.playback, "fast_until", 0.0), time.monotonic()+1.2)
+        event = getattr(self, "player_observe_event", None)
+        if event:
+            event.set()
+
     async def watch_player_window(self):
         last_fallback_fit = 0.0
         retry_after = 0.0
         failure_reported = False
+        failures = 0
         while not self.stopping:
             self.runtime.beat("watch_player_window")
             interval = self.playback.poll_interval
             if getattr(self, "pending_window_layout", None):
                 interval = min(interval, .20)
-            await asyncio.sleep(interval)
+            await self.wait_player_observer(interval)
             if self.stopping:
                 return
-            if self.busy or self.lock.locked():
-                if self.busy:
-                    await asyncio.to_thread(self.clear_window_input_targets)
+            if self.busy:
+                # Keep the native player presentation working while Android
+                # starts or a foreground management command is waiting.
+                hwnd = self.player_window.find()
+                if hwnd and not self.stopping:
+                    try:
+                        if time.monotonic() >= self.chrome_retry_after:
+                            await asyncio.to_thread(self.window_chrome.sync, hwnd, self.settings.hide_titlebar)
+                    except (OperationError, OSError) as error:
+                        self.chrome_retry_after = time.monotonic()+15
+                        self.events.put("窗口外观辅助将自动重试：" + str(error))
+                continue
+            if self.lock.locked():
                 continue
             async with self.lock:
                 if self.stopping:
@@ -621,6 +744,9 @@ class DesktopApp:
                         self.landscape_candidate = None
                         self.pending_window_layout = None
                         if not hwnd:
+                            if getattr(self, "connection_recovering", False):
+                                self.connection_recovering = False
+                                self.render()
                             self.landscape_initialized = None
                             self.last_window_layout = None
                         if self.playback.bridge.process:
@@ -635,12 +761,22 @@ class DesktopApp:
                             self.record_timing("observer_tick_ms", tick_started)
                         if self.stopping:
                             return
+                        await asyncio.to_thread(self.refresh_landscape_process, hwnd)
                         refresh = getattr(self.window_input, "refresh_targets", None)
                         if refresh:
                             await asyncio.to_thread(refresh)
                         if self.stopping:
                             return
                         failure_reported = False
+                        failures = 0
+                        if self.manager.connection_state == "device" and (not self.connected or getattr(self, "connection_recovering", False)):
+                            self.connected = True
+                            self.connection_recovering = False
+                            self.error_text = ""
+                            self.render()
+                        if self.playback.screen.kind in {"feed", "player"} and now-getattr(self, "last_splash_check", 0) >= 5:
+                            await asyncio.to_thread(self.player_window.hide_loaded_splashes, hwnd)
+                            self.last_splash_check = now
                         if (not self.playback.landscape_preparing
                                 and getattr(self.window_chrome, "geometry_holding", False) is True):
                             # Caption restoration changed the native frame;
@@ -661,7 +797,11 @@ class DesktopApp:
                     await asyncio.to_thread(self.clear_window_input_targets)
                     self.landscape_initialized = self.landscape_candidate = None
                     self.pending_window_layout = None
-                    retry_after = time.monotonic()+15
+                    failures += 1
+                    retry_after = time.monotonic()+min(2**(failures-1), 15)
+                    self.connection_recovering = True
+                    self.connected = self.manager.connection_state == "device"
+                    self.render()
                     await asyncio.to_thread(self.playback.reset)
                     await asyncio.to_thread(self.finish_window_geometry)
                     if not failure_reported:
@@ -701,6 +841,10 @@ class DesktopApp:
                     if self.stopping:
                         return
                     if result is not None:
+                        self.notify_player_change()
+                    if result is not None and result.get("method") == "page_refresh":
+                        self.runtime.update(last_page_input={"at": self.runtime.timestamp(), "method": "page_refresh"})
+                    elif result is not None:
                         self.runtime.update(last_wheel={
                             "at": self.runtime.timestamp(), "page": self.playback.screen.kind,
                             "ok": result.get("ok"), "edge": result.get("edge"),
@@ -712,9 +856,12 @@ class DesktopApp:
 
     async def watch_runtime(self):
         while not self.stopping:
+            self.guardian.pulse()
             self.runtime.beat("watch_runtime")
             screen = self.playback.screen
             self.runtime.update(
+                guardian={"enabled": self.guardian.enabled, "alive": self.guardian.alive(),
+                          "recovery": self.guardian.recovery},
                 bridge=process_state(self.playback.bridge.process),
                 bridge_diagnostics={
                     "last_exit_code": self.playback.bridge.last_exit_code,
@@ -726,6 +873,10 @@ class DesktopApp:
                     "recent_snapshot_ms": getattr(self.playback.bridge, "recent_snapshot_ms", []),
                 },
                 native=process_state(self.window_chrome.process),
+                fullscreen_presentation=getattr(self.window_input, "fullscreen_presentation", None),
+                fullscreen_passthrough=getattr(self.window_input, "fullscreen_passthrough", False),
+                fullscreen_target=getattr(self.window_chrome, "_fullscreen_target_key", None),
+                fullscreen_activation=getattr(self, "last_fullscreen_activation", None),
                 last_landscape={**(getattr(self.playback, "last_landscape", None) or {}),
                                 "window": getattr(self, "last_landscape_window", None)},
                 landscape_cache=getattr(self, "landscape_initialized", None),
@@ -736,10 +887,15 @@ class DesktopApp:
                         "landscape_preparing": self.playback.landscape_preparing,
                         "root_bounds": screen.nodes[0]["bounds"] if screen.nodes else None,
                         "episode_cells": [{"episode": n.get("text"), "bounds": n.get("bounds")}
-                                          for n in screen.nodes if short_id(n) == "jk6" and n.get("text", "").isdigit()][:8],
+                                          for n in screen.nodes if short_id(n) == "jk6" and n.get("text", "").isdigit()][:40],
                         "controls": [{"id": short_id(n), "text": n.get("text"), "bounds": n.get("bounds")}
-                                     for n in screen.nodes if short_id(n) in {"arc", "hwv", "f"} or n.get("text") == "全屏观看"][:12]},
+                                     for n in screen.nodes if short_id(n) in {"arc", "hwv", "f", "eft", "kea"} or n.get("text") == "全屏观看"][:12]},
                 busy=self.busy, player_hwnd=self.window_chrome.hwnd,
+                connection={"state": self.manager.connection_state,
+                            "last_command": self.manager.last_command,
+                            "last_error": self.manager.last_connection_error},
+                apps_loading=self.apps_loading,
+                connection_recovering=getattr(self, "connection_recovering", False),
                 hide_titlebar=self.settings.hide_titlebar,
                 helper_window={"minimized": self.page.window.minimized,
                                "visible": self.page.window.visible},
@@ -787,28 +943,50 @@ class DesktopApp:
             result = None
             try:
                 result = await asyncio.to_thread(operation)
-                self.store.save(self.settings)
+                await asyncio.to_thread(self.store.save, self.settings)
             except Exception as error:
                 self.error_text = str(error)
                 self.events.put("未完成：" + str(error))
                 self.log.exception(title)
             finally:
-                try:
-                    self.connected = await asyncio.to_thread(self.manager.state) == "device"
-                    self.wsa_found = self.manager.installation is not None
-                    if self.connected:
-                        self.apps = await asyncio.to_thread(self.manager.list_apps)
-                except OperationError:
-                    self.connected = False
+                # Commands already know their connection result. Do not keep
+                # the entire UI and player input locked while fetching optional
+                # app metadata after a successful launch.
+                self.connected = self.manager.connection_state == "device"
+                self.wsa_found = self.manager.installation is not None
                 self.busy = False
                 self.render()
+                if self.connected and not self.stopping:
+                    self.schedule_apps_refresh()
             return result
+
+    def schedule_apps_refresh(self):
+        if self.apps_refresh_task is None or self.apps_refresh_task.done():
+            self.apps_refresh_task = asyncio.create_task(self.refresh_apps())
+
+    async def refresh_apps(self):
+        self.apps_loading = True
+        try:
+            apps = await asyncio.to_thread(self.manager.list_apps)
+            if not self.stopping:
+                self.apps = apps
+        except OperationError as error:
+            # An application-list timeout does not undo a ready player or
+            # report a successful connection/launch as failed.
+            self.log.warning("应用列表稍后刷新：%s", error)
+        finally:
+            self.apps_loading = False
+            if not self.stopping:
+                self.render()
 
     async def initialize(self):
         if self.store.load_warning:
             self.events.put(self.store.load_warning)
         await self.refresh(None)
-        if self.settings.auto_open and self.wsa_found and (not self.connected or any(app["package"] == self.settings.favorite for app in self.apps)):
+        if getattr(getattr(self, "guardian", None), "recovery", False):
+            self.events.put("后台辅助已自动恢复，已接回现有播放窗口。")
+            return
+        if self.settings.auto_open and self.wsa_found:
             await self.launch_favorite(None)
 
     async def refresh(self, _):
@@ -880,6 +1058,9 @@ class DesktopApp:
                 self.task_text.value = message[:160]
                 changed = True
             if changed:
+                if self.manager.connection_state == "device" and not self.connected:
+                    self.connected = True
+                    self.render()
                 if self.view == "activity" and self.activity_list:
                     self.activity_list.controls = [self.text(line, 12, MUTED, selectable=True) for line in self.history]
                 self.page.update()

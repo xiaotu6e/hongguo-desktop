@@ -30,6 +30,8 @@ class UiBridge:
         self.last_shutdown_forced = False
         self.last_failure = None
         self.recoveries = 0
+        self._needs_reconnect = False
+        self._pending_recovery = False
         self.last_snapshot = None
         self._snapshot_timings = deque(maxlen=20)
 
@@ -49,6 +51,7 @@ class UiBridge:
         if self.process and self.process.poll() is None:
             return
         exited = self.process
+        recovering = exited is not None or self._needs_reconnect
         self.close()
         if exited is not None:
             # A periodic poll can discover an ADB crash before a request ever
@@ -65,6 +68,13 @@ class UiBridge:
         if not jar.is_file():
             raise OperationError("播放辅助组件缺失，请保留工具目录的完整内容。")
         remote = "/data/local/tmp/hongguo-ui-bridge.jar"
+        if recovering or getattr(self.manager, "connection_state", "unknown") in {"offline", "unauthorized"}:
+            recovering = True
+            state = self.manager.reconnect()
+            if state == "unauthorized":
+                raise OperationError("播放辅助需要 Android 连接授权，请在 WSA 窗口中选择允许。")
+            if state != "device":
+                raise self._lost("本机 Android 辅助连接正在恢复，已有播放窗口可继续使用。")
         result = self.manager.command("push", str(jar), remote, timeout=8)
         if result.returncode:
             raise OperationError("播放辅助连接未就绪。")
@@ -114,8 +124,9 @@ class UiBridge:
             thread.start()
         if not self.receive().get("ready"):
             raise self._lost("播放辅助服务启动失败。")
-        if exited is not None:
-            self.recoveries += 1
+        self._needs_reconnect = False
+        if recovering:
+            self._pending_recovery = True
 
     def receive(self) -> dict:
         try:
@@ -133,7 +144,6 @@ class UiBridge:
                 if command != "snapshot":
                     raise
                 reply = self._request_once(command)
-                self.recoveries += 1
                 return reply
 
     def _request_once(self, command: str) -> dict:
@@ -150,9 +160,16 @@ class UiBridge:
                 raise self._lost(message)
             self.close()
             raise OperationError(message)
+        if self._pending_recovery:
+            # A ready handshake followed by EOF is not a successful recovery.
+            # Count it only after the new channel returns a real RPC response.
+            self.recoveries += 1
+            self._pending_recovery = False
         return reply
 
     def _lost(self, message, *, detail=None):
+        self._needs_reconnect = True
+        self._pending_recovery = False
         process = self.process
         self.close()
         code = self.last_exit_code if process is not None else None
